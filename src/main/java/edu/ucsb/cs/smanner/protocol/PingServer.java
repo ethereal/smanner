@@ -10,11 +10,15 @@ public class PingServer implements Protocol {
 	Node self;
 	Queue<Message> outgoing = new LinkedList<Message>();
 
+	public PingServer(Node self) {
+		this.self = self;
+	}
+
 	@Override
 	public void put(Message message) throws Exception {
 		if(message instanceof PingMessage) {
 			PingMessage ping = (PingMessage)message;
-			outgoing.add(new PongMessage(self, message.sender, ping.seqnum, ping.timestamp));
+			outgoing.add(new PongMessage(self, message.source, ping.seqnum, ping.timestamp));
 		} else {
 			throw new Exception("unknown message");
 		}

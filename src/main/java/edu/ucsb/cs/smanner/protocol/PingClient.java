@@ -7,16 +7,21 @@ import edu.ucsb.cs.smanner.net.Node;
 
 public class PingClient implements Protocol {
 	
-	final static long INTERVAL = 1000000000;
-	
 	Node self;
 	Node dest;
-
+	long intervalInNs;
+	
 	long seqnum;
 	long lastTimestamp;
 	
 	List<Long> responses = new ArrayList<Long>();
 	
+	public PingClient(Node self, Node dest, long intervalInNs) {
+		this.self = self;
+		this.dest = dest;
+		this.intervalInNs = intervalInNs;
+	}
+
 	@Override
 	public void put(Message message) throws Exception {
 		if(message instanceof PongMessage) {
@@ -29,17 +34,15 @@ public class PingClient implements Protocol {
 
 	@Override
 	public Message get() throws Exception {
-		if(lastTimestamp + INTERVAL <= System.nanoTime()) {
-			seqnum++;
-			lastTimestamp = lastTimestamp + INTERVAL;
-			return new PingMessage(self, dest, seqnum, lastTimestamp);
-		}
-		return null;
+		Message message = new PingMessage(self, dest, seqnum, lastTimestamp);
+		seqnum++;
+		lastTimestamp = lastTimestamp + intervalInNs;
+		return message;
 	}
 
 	@Override
 	public boolean hasMessage() {
-		return (lastTimestamp + INTERVAL <= System.nanoTime());
+		return (lastTimestamp + intervalInNs <= System.nanoTime());
 	}
 
 	@Override
