@@ -3,18 +3,10 @@ package edu.ucsb.cs.smanner.protocol;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import edu.ucsb.cs.smanner.net.Node;
+public class PingServer extends Protocol {
 
-public class PingServer implements Protocol {
-
-	Node self;
 	Queue<Message> outgoing = new LinkedList<Message>();
 
-	public PingServer(Node self) {
-		this.self = self;
-	}
-
-	@Override
 	public void put(Message message) throws Exception {
 		if (message instanceof PingMessage) {
 			PingMessage ping = (PingMessage) message;
@@ -37,10 +29,5 @@ public class PingServer implements Protocol {
 	@Override
 	public boolean isDone() {
 		return false;
-	}
-
-	@Override
-	public void setTime(long time) {
-		// ignore
 	}
 }

@@ -1,11 +1,13 @@
 package edu.ucsb.cs.smanner.net;
 
+import java.io.EOFException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -24,7 +26,7 @@ import edu.ucsb.cs.smanner.protocol.Protocol;
 public class Moderator {
 	private static Logger log = LoggerFactory.getLogger(Moderator.class);
 	
-	Node node;
+	Node self;
 	Protocol protocol;
 	
 	Set<Node> nodes = new HashSet<Node>();
@@ -37,9 +39,9 @@ public class Moderator {
 	
 	ExecutorService executor = Executors.newCachedThreadPool();;
 	
-	public Moderator(Node node, Protocol protocol) {
-		log.trace("Moderator::Moderator({}, {})", node,  protocol);
-		this.node = node;
+	public Moderator(Node self, Protocol protocol) {
+		log.trace("Moderator::Moderator({}, {})", self,  protocol);
+		this.self = self;
 		this.protocol = protocol;
 	}
 
@@ -71,6 +73,10 @@ public class Moderator {
 	
 	void run() {
 		log.trace("Moderator::run()");
+		protocol.setTime(0);
+		protocol.setNodes(Collections.unmodifiableSet(nodes));
+		protocol.setSelf(self);
+		
 		for(InputThread t : inputThreads.values())
 			executor.execute(t);
 		
@@ -115,8 +121,8 @@ public class Moderator {
 					protocol.setTime(timeCurrent);
 					
 					for (Message message : incoming) {
-						if(! node.equals(message.getDestination())) {
-							log.error("Received message for {} at {}", message.getDestination(), node);
+						if(! self.equals(message.getDestination())) {
+							log.error("Received message for {} at {}", message.getDestination(), self);
 							return;
 						}
 						
@@ -138,8 +144,8 @@ public class Moderator {
 					while (protocol.hasMessage()) {
 						Message message = protocol.get();
 						
-						if(! node.equals(message.getSource())) {
-							log.error("Sending message from {} at {}", message.getDestination(), node);
+						if(! self.equals(message.getSource())) {
+							log.error("Sending message from {} at {}", message.getDestination(), self);
 							return;
 						}
 						
@@ -198,6 +204,8 @@ public class Moderator {
 					log.debug("Enqueueing message from {}", node);
 					inQueues.get(node).add(message);
 				}
+			} catch (EOFException e) {
+				log.info("InputThread {} exiting due to EOF");
 			} catch (Exception e) {
 				log.error("InputThread {} encountered exception: {}", node, e);
 			}
@@ -232,6 +240,8 @@ public class Moderator {
 					Message message = outQueues.get(node).take();
 					outObj.writeObject(message);
 				}
+			} catch (EOFException e) {
+				log.info("OutputThread {} exiting due to EOF");
 			} catch (Exception e) {
 				log.error("OutputThread {} encountered exception: {}", node, e);
 			}

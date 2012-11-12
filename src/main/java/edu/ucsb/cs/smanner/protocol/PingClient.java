@@ -3,12 +3,8 @@ package edu.ucsb.cs.smanner.protocol;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.ucsb.cs.smanner.net.Node;
+public class PingClient extends Protocol {
 
-public class PingClient implements Protocol {
-
-	Node self;
-	Node dest;
 	long intervalInNs;
 	long time;
 
@@ -17,9 +13,7 @@ public class PingClient implements Protocol {
 
 	List<Long> responses = new ArrayList<Long>();
 
-	public PingClient(Node self, Node dest, long intervalInNs) {
-		this.self = self;
-		this.dest = dest;
+	public PingClient(long intervalInNs) {
 		this.intervalInNs = intervalInNs;
 	}
 
@@ -35,7 +29,7 @@ public class PingClient implements Protocol {
 
 	@Override
 	public Message get() throws Exception {
-		Message message = new PingMessage(self, dest, seqnum, lastTimestamp);
+		Message message = new PingMessage(self, null, seqnum, lastTimestamp); // FIXME null dest
 		seqnum++;
 		lastTimestamp = lastTimestamp + intervalInNs;
 		return message;
@@ -49,10 +43,5 @@ public class PingClient implements Protocol {
 	@Override
 	public boolean isDone() {
 		return false;
-	}
-
-	@Override
-	public void setTime(long time) {
-		this.time = time;
 	}
 }

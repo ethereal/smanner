@@ -11,7 +11,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.ucsb.cs.smanner.protocol.CountProtocol;
+import edu.ucsb.cs.smanner.protocol.CountSender;
 
 public class ModeratorTest {
 	private static Logger log = LoggerFactory.getLogger(ModeratorTest.class);
@@ -28,7 +28,7 @@ public class ModeratorTest {
 		out = new PipedOutputStream();
 		in.connect(out);
 		
-		moderator = new Moderator(node, new CountProtocol(node, node, 20, 10000000));
+		moderator = new Moderator(node, new CountSender(20, 10000000));
 		moderator.addNode(node, in, out);
 	}
 

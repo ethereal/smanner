@@ -29,6 +29,11 @@ public class Node implements Serializable {
 	public URI getHost() {
 		return host;
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("Node(%s)", id);
+	}
 
 	@Override
 	public int hashCode() {
