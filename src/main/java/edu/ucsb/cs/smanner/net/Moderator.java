@@ -21,8 +21,8 @@ import org.slf4j.LoggerFactory;
 import edu.ucsb.cs.smanner.protocol.Message;
 import edu.ucsb.cs.smanner.protocol.Protocol;
 
-public class Reactor {
-	private static Logger log = LoggerFactory.getLogger(Reactor.class);
+public class Moderator {
+	private static Logger log = LoggerFactory.getLogger(Moderator.class);
 	
 	Node node;
 	Protocol protocol;
@@ -37,22 +37,27 @@ public class Reactor {
 	
 	ExecutorService executor = Executors.newCachedThreadPool();;
 	
-	public Reactor(Node node, Protocol protocol) {
+	public Moderator(Node node, Protocol protocol) {
+		log.trace("Moderator::Moderator({}, {})", node,  protocol);
 		this.node = node;
 		this.protocol = protocol;
 	}
 
-	void addNode(Node node, InputStream in, OutputStream out) throws Exception {
+	void addNode(Node node, InputStream in, OutputStream out) {
+		log.trace("Moderator::addNode({}, {}, {})", new Object[] {node,  in, out});
 		nodes.add(node);
 		
+		log.trace("Moderator::addNode::createQueues");
 		inQueues.put(node, new LinkedBlockingQueue<Message>());
 		outQueues.put(node, new LinkedBlockingQueue<Message>());
 		
-		inputThreads.put(node, new InputThread(node, new ObjectInputStream(in)));
-		outputThreads.put(node, new OutputThread(node, new ObjectOutputStream(out)));
+		log.trace("Moderator::addNode::createThreads");
+		inputThreads.put(node, new InputThread(node, in));
+		outputThreads.put(node, new OutputThread(node, out));
 	}
 	
 	void cancel() {
+		log.trace("Moderator::cancel()");
 		for(InputThread t : inputThreads.values())
 			t.cancel();
 		
@@ -65,6 +70,7 @@ public class Reactor {
 	}
 	
 	void run() {
+		log.trace("Moderator::run()");
 		for(InputThread t : inputThreads.values())
 			executor.execute(t);
 		
@@ -75,7 +81,8 @@ public class Reactor {
 	}
 	
 	boolean isDone() {
-		return !executor.isTerminated();
+		log.trace("Moderator::isDone()");
+		return protocol.isDone();
 	}
 	
 	class ModeratorThread implements Runnable {
@@ -84,6 +91,10 @@ public class Reactor {
 
 		@Override
 		public void run() {
+			log.trace("ModeratorThread::run()");
+			
+			long timeStart = System.nanoTime();
+			
 			while (active) {
 				Collection<Message> incoming = new ArrayList<Message>();
 
@@ -100,13 +111,16 @@ public class Reactor {
 				
 				// deliver messages
 				try {
+					long timeCurrent = System.nanoTime() - timeStart;
+					protocol.setTime(timeCurrent);
+					
 					for (Message message : incoming) {
 						if(! node.equals(message.getDestination())) {
 							log.error("Received message for {} at {}", message.getDestination(), node);
 							return;
 						}
 						
-						if(nodes.contains(message.getSource())) {
+						if(! nodes.contains(message.getSource())) {
 							log.error("Received message from unknown node {}", message.getSource());
 							return;
 						}
@@ -129,7 +143,7 @@ public class Reactor {
 							return;
 						}
 						
-						if(nodes.contains(message.getDestination())) {
+						if(! nodes.contains(message.getDestination())) {
 							log.error("Sending message to unknown node {}", message.getSource());
 							return;
 						}
@@ -154,6 +168,7 @@ public class Reactor {
 		}
 		
 		void cancel() {
+			log.trace("ModeratorThread::cancel()");
 			active = false;
 		}
 	}
@@ -161,20 +176,24 @@ public class Reactor {
 	class InputThread implements Runnable {
 		volatile boolean active = true;
 		
-		ObjectInputStream in;
+		InputStream in;
 		Node node;
 
-		public InputThread(Node node, ObjectInputStream in) {
+		public InputThread(Node node, InputStream in) {
+			log.trace("InputThread::InputThread({}, {})", node, in);
 			this.in = in;
 			this.node = node;
 		}
 
 		@Override
 		public void run() {
+			log.trace("InputThread::run()");
 			try {
+				ObjectInputStream inObj = new ObjectInputStream(in);
+				
 				while (active) {
 					log.debug("Waiting for message from {}", node);
-					Message message = (Message) in.readObject();
+					Message message = (Message) inObj.readObject();
 					
 					log.debug("Enqueueing message from {}", node);
 					inQueues.get(node).add(message);
@@ -185,6 +204,7 @@ public class Reactor {
 		}
 
 		public void cancel() {
+			log.trace("InputThread::cancel()");
 			active = false;
 		}
 	}
@@ -192,21 +212,25 @@ public class Reactor {
 	class OutputThread implements Runnable {
 		volatile boolean active = true;
 		
-		ObjectOutputStream out;
+		OutputStream out;
 		Node node;
 
-		public OutputThread(Node node, ObjectOutputStream out) {
+		public OutputThread(Node node, OutputStream out) {
+			log.trace("OutputThread::OutputThread({}, {})", node, out);
 			this.out = out;
 			this.node = node;
 		}
 
 		@Override
 		public void run() {
+			log.trace("OutputThread::run()");
 			try {
+				ObjectOutputStream outObj = new ObjectOutputStream(out);
+				
 				while (active) {
 					log.debug("Sending message to {}", node);
 					Message message = outQueues.get(node).take();
-					out.writeObject(message);
+					outObj.writeObject(message);
 				}
 			} catch (Exception e) {
 				log.error("OutputThread {} encountered exception: {}", node, e);
@@ -214,6 +238,7 @@ public class Reactor {
 		}
 
 		public void cancel() {
+			log.trace("OutputThread::cancel()");
 			active = false;
 		}
 	}

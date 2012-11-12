@@ -6,7 +6,7 @@ import java.util.Queue;
 import edu.ucsb.cs.smanner.net.Node;
 
 public class PingServer implements Protocol {
-	
+
 	Node self;
 	Queue<Message> outgoing = new LinkedList<Message>();
 
@@ -16,8 +16,8 @@ public class PingServer implements Protocol {
 
 	@Override
 	public void put(Message message) throws Exception {
-		if(message instanceof PingMessage) {
-			PingMessage ping = (PingMessage)message;
+		if (message instanceof PingMessage) {
+			PingMessage ping = (PingMessage) message;
 			outgoing.add(new PongMessage(self, message.source, ping.seqnum, ping.timestamp));
 		} else {
 			throw new Exception("unknown message");
@@ -39,4 +39,8 @@ public class PingServer implements Protocol {
 		return false;
 	}
 
+	@Override
+	public void setTime(long time) {
+		// ignore
+	}
 }

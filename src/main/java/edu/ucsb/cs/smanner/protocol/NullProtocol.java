@@ -19,4 +19,9 @@ public class NullProtocol implements Protocol {
 	public void put(Message message) throws Exception {
 		// ignore
 	}
+
+	@Override
+	public void setTime(long time) {
+		// ignore
+	}
 }

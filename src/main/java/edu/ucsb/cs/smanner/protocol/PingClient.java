@@ -6,16 +6,17 @@ import java.util.List;
 import edu.ucsb.cs.smanner.net.Node;
 
 public class PingClient implements Protocol {
-	
+
 	Node self;
 	Node dest;
 	long intervalInNs;
-	
+	long time;
+
 	long seqnum;
 	long lastTimestamp;
-	
+
 	List<Long> responses = new ArrayList<Long>();
-	
+
 	public PingClient(Node self, Node dest, long intervalInNs) {
 		this.self = self;
 		this.dest = dest;
@@ -24,9 +25,9 @@ public class PingClient implements Protocol {
 
 	@Override
 	public void put(Message message) throws Exception {
-		if(message instanceof PongMessage) {
-			PongMessage pong = (PongMessage)message;
-			responses.add((int)pong.seqnum, System.nanoTime() - pong.timestamp);
+		if (message instanceof PongMessage) {
+			PongMessage pong = (PongMessage) message;
+			responses.add((int) pong.seqnum, time - pong.timestamp);
 		} else {
 			throw new Exception("unknown message");
 		}
@@ -42,7 +43,7 @@ public class PingClient implements Protocol {
 
 	@Override
 	public boolean hasMessage() {
-		return (lastTimestamp + intervalInNs <= System.nanoTime());
+		return (lastTimestamp + intervalInNs <= time);
 	}
 
 	@Override
@@ -50,4 +51,8 @@ public class PingClient implements Protocol {
 		return false;
 	}
 
+	@Override
+	public void setTime(long time) {
+		this.time = time;
+	}
 }

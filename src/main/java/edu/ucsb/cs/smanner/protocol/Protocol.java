@@ -6,4 +6,5 @@ public interface Protocol {
 	Message get() throws Exception;
 	boolean hasMessage();
 	boolean isDone();
+	void setTime(long time);
 }
