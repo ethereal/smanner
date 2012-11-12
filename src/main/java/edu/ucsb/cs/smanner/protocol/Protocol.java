@@ -5,9 +5,9 @@ import java.util.Set;
 import edu.ucsb.cs.smanner.net.Node;
 
 public abstract class Protocol {
-	long time;
-	Set<Node> nodes;
-	Node self;
+	protected long time;
+	protected Set<Node> nodes;
+	protected Node self;
 	
 	public abstract void put(Message message) throws Exception;
 	public abstract Message get() throws Exception;
