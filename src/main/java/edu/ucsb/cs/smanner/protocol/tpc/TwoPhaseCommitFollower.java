@@ -23,6 +23,7 @@ public class TwoPhaseCommitFollower extends Protocol {
 
 	@Override
 	public void put(Message message) throws Exception {
+		log.trace("TwoPhaseCommitFollower::put({})", message);
 		if(message instanceof PrepareMessage) {
 			PrepareMessage msg = (PrepareMessage)message;
 			
@@ -54,11 +55,13 @@ public class TwoPhaseCommitFollower extends Protocol {
 
 	@Override
 	public Message get() throws Exception {
+		log.trace("TwoPhaseCommitFollower::get()");
 		return outQueue.poll();
 	}
 
 	@Override
 	public boolean hasMessage() {
+		log.trace("TwoPhaseCommitFollower::hasMessage()");
 		return !outQueue.isEmpty();
 	}
 
@@ -69,6 +72,10 @@ public class TwoPhaseCommitFollower extends Protocol {
 	
 	void cancel() {
 		active = false;
+	}
+
+	public Transaction getTransaction(long id) {
+		return transactions.get(id);
 	}
 
 }

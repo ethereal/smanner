@@ -122,12 +122,12 @@ public class Moderator {
 					
 					for (Message message : incoming) {
 						if(! self.equals(message.getDestination())) {
-							log.error("Received message for {} at {}", message.getDestination(), self);
+							log.error("Received {} with invalid destination at {}", message, self);
 							return;
 						}
 						
 						if(! nodes.contains(message.getSource())) {
-							log.error("Received message from unknown node {}", message.getSource());
+							log.error("Received {} from unknown source at {}", message, self);
 							return;
 						}
 						
@@ -145,12 +145,12 @@ public class Moderator {
 						Message message = protocol.get();
 						
 						if(! self.equals(message.getSource())) {
-							log.error("Sending message from {} at {}", message.getDestination(), self);
+							log.error("Sent {} with invalid source at {}", message, self);
 							return;
 						}
 						
 						if(! nodes.contains(message.getDestination())) {
-							log.error("Sending message to unknown node {}", message.getSource());
+							log.error("Sent {} to unknown destination at {}", message, self);
 							return;
 						}
 
@@ -198,10 +198,8 @@ public class Moderator {
 				ObjectInputStream inObj = new ObjectInputStream(in);
 				
 				while (active) {
-					log.debug("Waiting for message from {}", node);
 					Message message = (Message) inObj.readObject();
-					
-					log.debug("Enqueueing message from {}", node);
+					log.debug("Receiving {}", message);
 					inQueues.get(node).add(message);
 				}
 			} catch (EOFException e) {
@@ -236,9 +234,10 @@ public class Moderator {
 				ObjectOutputStream outObj = new ObjectOutputStream(out);
 				
 				while (active) {
-					log.debug("Sending message to {}", node);
 					Message message = outQueues.get(node).take();
+					log.debug("Sending {}", message);
 					outObj.writeObject(message);
+					outObj.flush();
 				}
 			} catch (EOFException e) {
 				log.info("OutputThread {} exiting due to EOF");

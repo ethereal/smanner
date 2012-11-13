@@ -25,4 +25,9 @@ public class Message implements Serializable {
 	public Node getDestination() {
 		return destination;
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("%s(%s->%s)", getClass().getSimpleName(), source, destination);
+	}
 }
