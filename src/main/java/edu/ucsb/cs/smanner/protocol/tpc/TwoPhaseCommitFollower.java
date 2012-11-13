@@ -34,13 +34,11 @@ public class TwoPhaseCommitFollower extends Protocol {
 			if(transactions.containsKey(msg.id))
 				throw new Exception("Transaction ID already exists");
 			
-			Transaction t = new Transaction(msg.id);
-			t.setState(TransactionState.PREPARED);
+			Transaction t = new Transaction(msg.id, msg.getSource());
 			
-			log.debug("Prepare transaction {}", t.id);
+			log.debug("{}: Try prepare transaction {}", self, t.id);
 			transactions.put(msg.id, t);
-			
-			outQueue.add(new IsPreparedMessage(self, msg.getSource(), t.id));
+			notifyListenersPrepare(t);
 			
 		} else if(message instanceof CommitMessage) {
 			CommitMessage msg = (CommitMessage)message;
@@ -50,10 +48,8 @@ public class TwoPhaseCommitFollower extends Protocol {
 			
 			Transaction t = transactions.get(msg.id);
 			
-			log.debug("Commit transaction {}", t.id);
-			t.setState(TransactionState.COMMITTED);
-			
-			notifyListeners(t);
+			log.debug("{}: Try commit transaction {}", self, t.id);
+			notifyListenersCommit(t);
 		} else {
 			throw new Exception(String.format("unexpected message type %s", message.getClass()));
 		}
@@ -84,11 +80,30 @@ public class TwoPhaseCommitFollower extends Protocol {
 		return transactions.get(id);
 	}
 	
+	public void prepareTransaction(long id) {
+		log.debug("{}: Prepared transaction {}", self, id);
+		Transaction t = transactions.get(id);
+		t.setState(TransactionState.PREPARED);
+		outQueue.add(new IsPreparedMessage(self, t.coordinator, t.id));
+	}
+	
+	public void commitTransaction(long id) {
+		log.debug("{}: Committed transaction {}", self, id);
+		Transaction t = transactions.get(id);
+		t.setState(TransactionState.COMMITTED);
+	}
+	
 	public void addListener(TransactionListener listener) {
 		listeners.add(listener);
 	}
 	
-	void notifyListeners(Transaction t) {
+	void notifyListenersPrepare(Transaction t) {
+		for(TransactionListener l : listeners) {
+			l.notifyPrepare(t);
+		}
+	}
+
+	void notifyListenersCommit(Transaction t) {
 		for(TransactionListener l : listeners) {
 			l.notifyCommit(t);
 		}

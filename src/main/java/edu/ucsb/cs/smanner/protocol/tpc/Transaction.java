@@ -14,19 +14,22 @@ public class Transaction {
 	}
 	
 	final long id;
+	final Node coordinator;
 	final Set<Node> followers;
 	
 	TransactionState state;
 	Set<Node> preparedFollowers = new HashSet<Node>();
 	
-	public Transaction(long id) {
+	public Transaction(long id, Node coordinator) {
 		this.id = id;
+		this.coordinator = coordinator;
 		this.followers = null;
 		this.state = TransactionState.NEW;
 	}
 
-	public Transaction(long id, Set<Node> followers) {
+	public Transaction(long id, Node coordinator, Set<Node> followers) {
 		this.id = id;
+		this.coordinator = coordinator;
 		this.followers = followers;
 		this.state = TransactionState.NEW;
 	}

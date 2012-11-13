@@ -2,6 +2,7 @@ package edu.ucsb.cs.smanner.net;
 
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.ucsb.cs.smanner.protocol.tpc.Transaction;
 import edu.ucsb.cs.smanner.protocol.tpc.Transaction.TransactionState;
+import edu.ucsb.cs.smanner.protocol.tpc.TransactionListener;
 import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitCoordinator;
 import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitFollower;
 
@@ -70,16 +72,34 @@ public class TwoPhaseCommitTest {
 		coordA = new TwoPhaseCommitCoordinator();
 		followB = new TwoPhaseCommitFollower();
 		followC = new TwoPhaseCommitFollower();
+		
+		followB.addListener(new TransactionListener() {
+			@Override
+			public void notifyPrepare(Transaction transaction) {
+				followB.prepareTransaction(transaction.getId());
+			}
+			@Override
+			public void notifyCommit(Transaction transaction) {
+				followB.commitTransaction(transaction.getId());
+			}
+		});
+
+		followC.addListener(new TransactionListener() {
+			@Override
+			public void notifyPrepare(Transaction transaction) {
+				followC.prepareTransaction(transaction.getId());
+			}
+			@Override
+			public void notifyCommit(Transaction transaction) {
+				followC.commitTransaction(transaction.getId());
+			}
+		});
 
 		senderA = new Moderator(nodeA, coordA);
-		senderA.addNode(nodeB, inAB, outAB);
-		senderA.addNode(nodeC, inAC, outAC);
-
 		receiverB = new Moderator(nodeB, followB);
-		receiverB.addNode(nodeA, inBA, outBA);
-
 		receiverC = new Moderator(nodeC, followC);
-		receiverC.addNode(nodeA, inCA, outCA);
+
+		TestUtil.connectAll(Arrays.asList(new Moderator[] { senderA, receiverB, receiverC }));
 	}
 
 	@After
@@ -109,7 +129,7 @@ public class TwoPhaseCommitTest {
 		nodes.add(nodeB);
 		nodes.add(nodeC);
 		
-		Transaction t = new Transaction(0, nodes);
+		Transaction t = new Transaction(0, nodeA, nodes);
 		
 		senderA.run();
 		receiverB.run();

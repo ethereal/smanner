@@ -32,7 +32,7 @@ public class Node implements Serializable {
 	
 	@Override
 	public String toString() {
-		return String.format("Node(%s)", id);
+		return String.format("%s", id);
 	}
 
 	@Override

@@ -47,7 +47,7 @@ public class PaxosFollower extends Protocol {
 		proposals.put(msg.id, p);
 		
 		log.debug("{}: voting for proposal {}", self, p.id);
-		for(Node node : p.acceptors) {
+		for(Node node : nodes) {
 			outQueue.add(new AcceptMessage(self, node, p.id));
 		}
 		
@@ -65,7 +65,7 @@ public class PaxosFollower extends Protocol {
 		p.accept(msg.getSource());
 		
 		if(p.getState() == ProposalState.ACCEPTED) {
-			log.debug("accepted proposal {}", p.id);
+			log.debug("{}: accepted proposal {}", self, p.id);
 			notifyListeners(p);
 		}
 	}
