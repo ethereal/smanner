@@ -37,7 +37,7 @@ public class Moderator {
 	Map<Node, OutputThread> outputThreads = new HashMap<Node, OutputThread>();
 	ModeratorThread moderatorThread = new ModeratorThread();
 	
-	ExecutorService executor = Executors.newCachedThreadPool();;
+	ExecutorService executor;
 	
 	public Moderator(Node self, Protocol protocol) {
 		log.trace("Moderator::Moderator({}, {})", self,  protocol);
@@ -73,6 +73,8 @@ public class Moderator {
 	
 	void run() {
 		log.trace("Moderator::run()");
+		executor = Executors.newFixedThreadPool(inputThreads.size() + outputThreads.size() + 1);
+		
 		protocol.setTime(0);
 		protocol.setNodes(Collections.unmodifiableSet(nodes));
 		protocol.setSelf(self);
