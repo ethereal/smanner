@@ -1,5 +1,7 @@
 package edu.ucsb.cs.smanner.protocol.paxos;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -23,6 +25,8 @@ public class PaxosFollower extends Protocol {
 
 	Queue<Message> outQueue = new LinkedList<Message>();
 	Queue<AcceptMessage> acceptQueue = new LinkedList<AcceptMessage>();
+	
+	Collection<ProposalListener> listeners = new ArrayList<ProposalListener>();
 	
 	@Override
 	public void put(Message message) throws Exception {
@@ -62,6 +66,7 @@ public class PaxosFollower extends Protocol {
 		
 		if(p.getState() == ProposalState.ACCEPTED) {
 			log.debug("accepted proposal {}", p.id);
+			notifyListeners(p);
 		}
 	}
 	
@@ -97,5 +102,15 @@ public class PaxosFollower extends Protocol {
 
 	public Proposal getProposal(long id) {
 		return proposals.get(id);
+	}
+	
+	public void addListener(ProposalListener listener) {
+		listeners.add(listener);
+	}
+	
+	void notifyListeners(Proposal p) {
+		for(ProposalListener l : listeners) {
+			l.notifyCommit(p);
+		}
 	}
 }

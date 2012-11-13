@@ -1,5 +1,7 @@
 package edu.ucsb.cs.smanner.protocol.tpc;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -20,6 +22,8 @@ public class TwoPhaseCommitFollower extends Protocol {
 	Map<Long, Transaction> transactions = new HashMap<Long, Transaction>();
 	
 	Queue<Message> outQueue = new LinkedList<Message>();
+	
+	Collection<TransactionListener> listeners = new ArrayList<TransactionListener>();
 
 	@Override
 	public void put(Message message) throws Exception {
@@ -48,6 +52,8 @@ public class TwoPhaseCommitFollower extends Protocol {
 			
 			log.debug("Commit transaction {}", t.id);
 			t.setState(TransactionState.COMMITTED);
+			
+			notifyListeners(t);
 		} else {
 			throw new Exception(String.format("unexpected message type %s", message.getClass()));
 		}
@@ -76,6 +82,16 @@ public class TwoPhaseCommitFollower extends Protocol {
 
 	public Transaction getTransaction(long id) {
 		return transactions.get(id);
+	}
+	
+	public void addListener(TransactionListener listener) {
+		listeners.add(listener);
+	}
+	
+	void notifyListeners(Transaction t) {
+		for(TransactionListener l : listeners) {
+			l.notifyCommit(t);
+		}
 	}
 
 }
