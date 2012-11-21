@@ -15,10 +15,10 @@ import edu.ucsb.cs.smanner.protocol.paxos.Proposal.ProposalState;
 public class PaxosTest {
 	private static Logger log = LoggerFactory.getLogger(PaxosTest.class);
 
-	Node nodeL = new Node("L", "A:1234");
-	Node nodeA = new Node("A", "A");
-	Node nodeB = new Node("B", "B");
-	Node nodeC = new Node("C", "C");
+	final String nodeL = "L";
+	final String nodeA = "A";
+	final String nodeB = "B";
+	final String nodeC = "C";
 
 	Moderator serverL;
 	Moderator serverA;

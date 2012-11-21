@@ -3,8 +3,6 @@ package edu.ucsb.cs.smanner.protocol.paxos;
 import java.util.HashSet;
 import java.util.Set;
 
-import edu.ucsb.cs.smanner.net.Node;
-
 
 public class Proposal {
 	public enum ProposalState {
@@ -13,18 +11,18 @@ public class Proposal {
 	}
 	
 	final long id;
-	final Set<Node> acceptors;
+	final Set<String> acceptors;
 	
 	ProposalState state;
-	Set<Node> acceptedNodes = new HashSet<Node>();
+	Set<String> acceptedNodes = new HashSet<String>();
 
-	public Proposal(long id, Set<Node> acceptors) {
+	public Proposal(long id, Set<String> acceptors) {
 		this.id = id;
 		this.acceptors = acceptors;
 		this.state = ProposalState.NEW;
 	}
 	
-	public void accept(Node acceptor) {
+	public void accept(String acceptor) {
 		if(acceptors.contains(acceptor))
 			acceptedNodes.add(acceptor);
 		
@@ -41,11 +39,11 @@ public class Proposal {
 		this.state = state;
 	}
 
-	public Set<Node> getAcceptedNodes() {
+	public Set<String> getAcceptedNodes() {
 		return acceptedNodes;
 	}
 
-	public void setAcceptedNodes(Set<Node> acceptedNodes) {
+	public void setAcceptedNodes(Set<String> acceptedNodes) {
 		this.acceptedNodes = acceptedNodes;
 	}
 
@@ -53,7 +51,7 @@ public class Proposal {
 		return id;
 	}
 
-	public Set<Node> getAcceptors() {
+	public Set<String> getAcceptors() {
 		return acceptors;
 	}
 	

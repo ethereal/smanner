@@ -1,6 +1,5 @@
 package edu.ucsb.cs.smanner.protocol;
 
-import edu.ucsb.cs.smanner.net.Node;
 
 public class CountMessage extends Message {
 	/**
@@ -10,7 +9,7 @@ public class CountMessage extends Message {
 
 	final int index;
 
-	public CountMessage(Node source, Node destination, int index) {
+	public CountMessage(String source, String destination, int index) {
 		super(source, destination);
 		this.index = index;
 	}

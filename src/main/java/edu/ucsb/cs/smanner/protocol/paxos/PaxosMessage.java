@@ -1,6 +1,5 @@
 package edu.ucsb.cs.smanner.protocol.paxos;
 
-import edu.ucsb.cs.smanner.net.Node;
 import edu.ucsb.cs.smanner.protocol.Message;
 
 public class PaxosMessage extends Message {
@@ -11,7 +10,7 @@ public class PaxosMessage extends Message {
 	
 	final long id;
 
-	public PaxosMessage(Node source, Node destination, long id) {
+	public PaxosMessage(String source, String destination, long id) {
 		super(source, destination);
 		this.id = id;
 	}

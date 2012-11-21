@@ -2,9 +2,6 @@ package edu.ucsb.cs.smanner.net;
 
 import static org.junit.Assert.assertFalse;
 
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,22 +14,9 @@ import edu.ucsb.cs.smanner.protocol.CountSender;
 public class ModeratorMultiNodeTest {
 	private static Logger log = LoggerFactory.getLogger(ModeratorMultiNodeTest.class);
 
-	Node nodeA = new Node("A", "A");
-	Node nodeB = new Node("B", "B");
-	Node nodeC = new Node("C", "C");
-
-	PipedInputStream inAB;
-	PipedOutputStream outAB;
-	PipedInputStream inBA;
-	PipedOutputStream outBA;
-	PipedInputStream inAC;
-	PipedOutputStream outAC;
-	PipedInputStream inCA;
-	PipedOutputStream outCA;
-	PipedInputStream inBC;
-	PipedOutputStream outBC;
-	PipedInputStream inCB;
-	PipedOutputStream outCB;
+	final String nodeA = "A";
+	final String nodeB = "B";
+	final String nodeC = "C";
 
 	Moderator senderA;
 	Moderator receiverB;
@@ -40,36 +24,16 @@ public class ModeratorMultiNodeTest {
 
 	@Before
 	public void setUp() throws Exception {
-		inAB = new PipedInputStream();
-		outAB = new PipedOutputStream();
-		inBA = new PipedInputStream();
-		outBA = new PipedOutputStream();
-		inAB.connect(outBA);
-		inBA.connect(outAB);
-
-		inAC = new PipedInputStream();
-		outAC = new PipedOutputStream();
-		inCA = new PipedInputStream();
-		outCA = new PipedOutputStream();
-		inAC.connect(outCA);
-		inCA.connect(outAC);
-
-		inBC = new PipedInputStream();
-		outBC = new PipedOutputStream();
-		inCB = new PipedInputStream();
-		outCB = new PipedOutputStream();
-		inBC.connect(outCB);
-		inCB.connect(outBC);
-
 		senderA = new Moderator(nodeA, new CountSender(20, 10000000));
-		senderA.addNode(nodeB, inAB, outAB);
-		senderA.addNode(nodeC, inAC, outAC);
-
 		receiverB = new Moderator(nodeB, new CountReceiver(20));
-		receiverB.addNode(nodeA, inBA, outBA);
-
 		receiverC = new Moderator(nodeC, new CountReceiver(20));
-		receiverC.addNode(nodeA, inCA, outCA);
+
+		senderA.addNode(receiverB);
+		senderA.addNode(receiverC);
+
+		receiverB.addNode(senderA);
+
+		receiverC.addNode(senderA);
 	}
 
 	@After
@@ -77,19 +41,6 @@ public class ModeratorMultiNodeTest {
 		senderA.cancel();
 		receiverB.cancel();
 		receiverC.cancel();
-		
-		inAB.close();
-		outAB.close();
-		inAC.close();
-		outAC.close();
-		inBC.close();
-		outBC.close();
-		inBA.close();
-		outBA.close();
-		inCA.close();
-		outCA.close();
-		inCB.close();
-		outCB.close();
 	}
 
 	@Test(timeout = 1000)
