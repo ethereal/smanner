@@ -24,10 +24,10 @@ public class SmallSpannerTest {
 	private static Logger log = LoggerFactory.getLogger(SmallSpannerTest.class);
 	
 	// First Paxos Group
-	Node nodeAL = new Node("AL", "A1:1337");
-	Node nodeA1 = new Node("A1", "A1");
-	Node nodeA2 = new Node("A2", "A2");
-	Node nodeA3 = new Node("A3", "A3");
+	final String nodeAL = "AL";
+	final String nodeA1 = "A1";
+	final String nodeA2 = "A2";
+	final String nodeA3 = "A3";
 	
 	Moderator mAL;
 	Moderator mA1;
@@ -38,10 +38,10 @@ public class SmallSpannerTest {
 	PaxosFollower pfA;
 	
 	// Second Paxos Group
-	Node nodeBL = new Node("BL", "B1:1337");
-	Node nodeB1 = new Node("B1", "B1");
-	Node nodeB2 = new Node("B2", "B2");
-	Node nodeB3 = new Node("B3", "B3");
+	final String nodeBL = "BL";
+	final String nodeB1 = "B1";
+	final String nodeB2 = "B2";
+	final String nodeB3 = "B3";
 	
 	Moderator mBL;
 	Moderator mB1;
@@ -52,9 +52,9 @@ public class SmallSpannerTest {
 	PaxosFollower pfB;
 	
 	// 2PC group
-	Node nodeCoord = new Node("COORD", "A1:31337");
-	Node nodeFollowA = new Node("FA", "A1:14113");
-	Node nodeFollowB = new Node("FB", "B1:14113");
+	final String nodeCoord = "COORD";
+	final String nodeFollowA = "FA";
+	final String nodeFollowB = "FB";
 
 	Moderator mCoord;
 	Moderator mFollowA;
@@ -178,7 +178,7 @@ public class SmallSpannerTest {
 	public void testCommit() throws Exception {
 		log.trace("SmallSpannerTest::testCommit()");
 		
-		Set<Node> followers = new HashSet<Node>();
+		Set<String> followers = new HashSet<String>();
 		followers.add(nodeFollowA);
 		followers.add(nodeFollowB);
 		

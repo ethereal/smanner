@@ -8,6 +8,11 @@
 	<name>smanner</name>
 	<url>http://cs.ucsb.edu</url>
 
+	<!-- Shared version number properties -->
+	<properties>
+		<org.springframework.version>3.0.5.RELEASE</org.springframework.version>
+	</properties>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -37,6 +42,14 @@
 	</build>
 
 	<dependencies>
+		<!-- Core utilities used by other modules. Define this if you use Spring 
+			Utility APIs (org.springframework.core.*/org.springframework.util.*) -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+			<version>${org.springframework.version}</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>

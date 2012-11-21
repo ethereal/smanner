@@ -8,12 +8,11 @@ import java.util.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.ucsb.cs.smanner.net.Node;
+import edu.ucsb.cs.smanner.protocol.AbstractProtocol;
 import edu.ucsb.cs.smanner.protocol.Message;
-import edu.ucsb.cs.smanner.protocol.Protocol;
 import edu.ucsb.cs.smanner.protocol.tpc.Transaction.TransactionState;
 
-public class TwoPhaseCommitCoordinator extends Protocol {
+public class TwoPhaseCommitCoordinator extends AbstractProtocol {
 	private static Logger log = LoggerFactory.getLogger(TwoPhaseCommitCoordinator.class);
 	volatile boolean active = true;
 
@@ -35,7 +34,7 @@ public class TwoPhaseCommitCoordinator extends Protocol {
 				log.debug("transaction {} prepared", t.id);
 				
 				t.setState(TransactionState.COMMITTED);
-				for(Node follower : t.followers) {
+				for(String follower : t.followers) {
 					outQueue.add(new CommitMessage(self, follower, msg.id));
 				}
 			}
@@ -68,7 +67,7 @@ public class TwoPhaseCommitCoordinator extends Protocol {
 	public void addTransaction(Transaction t) {
 		log.debug("add transaction {}", t.id);
 		transactions.put(t.id, t);
-		for(Node follower : t.followers) {
+		for(String follower : t.followers) {
 			outQueue.add(new PrepareMessage(self, follower, t.id));
 		}
 	}

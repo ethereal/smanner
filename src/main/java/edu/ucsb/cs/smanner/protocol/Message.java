@@ -2,27 +2,25 @@ package edu.ucsb.cs.smanner.protocol;
 
 import java.io.Serializable;
 
-import edu.ucsb.cs.smanner.net.Node;
-
 public class Message implements Serializable {
 	/**
 	 * SerialVersionUID 
 	 */
 	private static final long serialVersionUID = 1151213061714710185L;
 	
-	final Node source;
-	final Node destination;
+	final String source;
+	final String destination;
 
-	public Message(Node source, Node destination) {
+	public Message(String source, String destination) {
 		this.source = source;
 		this.destination = destination;
 	}
 
-	public Node getSource() {
+	public String getSource() {
 		return source;
 	}
 
-	public Node getDestination() {
+	public String getDestination() {
 		return destination;
 	}
 	
