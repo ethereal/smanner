@@ -1,6 +1,6 @@
 package edu.ucsb.cs.smanner.protocol;
 
-public class NullProtocol extends Protocol {
+public class NullProtocol extends AbstractProtocol {
 	@Override
 	public Message get() throws Exception {
 		return null;

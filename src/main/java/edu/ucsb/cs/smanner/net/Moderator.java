@@ -1,213 +1,103 @@
 package edu.ucsb.cs.smanner.net;
 
-import java.io.EOFException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.ucsb.cs.smanner.protocol.Message;
+import edu.ucsb.cs.smanner.protocol.MessageEndpoint;
 import edu.ucsb.cs.smanner.protocol.Protocol;
 
-public class Moderator {
+public class Moderator implements MessageEndpoint {
+	public static final long POLL_INTERVAL = 10;
+
 	private static Logger log = LoggerFactory.getLogger(Moderator.class);
-	
-	Node self;
+
+	String self;
 	Protocol protocol;
-	
-	Set<Node> nodes = new HashSet<Node>();
-	Map<Node, BlockingQueue<Message>> inQueues = new HashMap<Node, BlockingQueue<Message>>();
-	Map<Node, BlockingQueue<Message>> outQueues = new HashMap<Node, BlockingQueue<Message>>();
-	
-	Map<Node, InputThread> inputThreads = new HashMap<Node, InputThread>();
-	Map<Node, OutputThread> outputThreads = new HashMap<Node, OutputThread>();
-	ModeratorThread moderatorThread = new ModeratorThread();
-	
+	Map<String, MessageEndpoint> endpoints = new HashMap<String, MessageEndpoint>();
+
+	BlockingQueue<Message> inQueue;
+	InputThread inputThread;
+	OutputThread outputThread;
+
 	ExecutorService executor;
-	
-	public Moderator(Node self, Protocol protocol) {
-		log.trace("Moderator::Moderator({}, {})", self,  protocol);
+
+	public Moderator(String self, Protocol protocol) {
+		log.trace("Moderator::Moderator({}, {})", self, protocol);
 		this.self = self;
 		this.protocol = protocol;
 	}
 
-	void addNode(Node node, InputStream in, OutputStream out) {
-		log.trace("Moderator::addNode({}, {}, {})", new Object[] {node,  in, out});
-		nodes.add(node);
-		
-		log.trace("Moderator::addNode::createQueues");
-		inQueues.put(node, new LinkedBlockingQueue<Message>());
-		outQueues.put(node, new LinkedBlockingQueue<Message>());
-		
-		log.trace("Moderator::addNode::createThreads");
-		inputThreads.put(node, new InputThread(node, in));
-		outputThreads.put(node, new OutputThread(node, out));
+	void addNode(MessageEndpoint endpoint) {
+		log.trace("Moderator::addIdentifier({}, {})", new Object[] {
+				endpoint.getIdentifier(), endpoint });
+		endpoints.put(endpoint.getIdentifier(), endpoint);
+
+		log.trace("Moderator::addIdentifier::createQueues");
+		inQueue = new LinkedBlockingQueue<Message>();
+
+		log.trace("Moderator::addIdentifier::createThreads");
+		inputThread = new InputThread();
+		outputThread = new OutputThread();
 	}
-	
+
 	void cancel() {
 		log.trace("Moderator::cancel()");
-		for(InputThread t : inputThreads.values())
-			t.cancel();
+		if(inputThread != null)
+			inputThread.cancel();
 		
-		for(OutputThread t : outputThreads.values())
-			t.cancel();
+		if(outputThread != null)
+			outputThread.cancel();
 		
-		moderatorThread.cancel();
-		
-		executor.shutdown();
+		if(executor != null)
+			executor.shutdown();
 	}
-	
+
 	void run() {
 		log.trace("Moderator::run()");
-		executor = Executors.newFixedThreadPool(inputThreads.size() + outputThreads.size() + 1);
-		
+		executor = Executors.newFixedThreadPool(2);
+
 		protocol.setTime(0);
-		protocol.setNodes(Collections.unmodifiableSet(nodes));
+		protocol.setNodes(Collections.unmodifiableSet(endpoints.keySet()));
 		protocol.setSelf(self);
-		
-		for(InputThread t : inputThreads.values())
-			executor.execute(t);
-		
-		for(OutputThread t : outputThreads.values())
-			executor.execute(t);
-		
-		executor.execute(moderatorThread);
+
+		executor.execute(inputThread);
+		executor.execute(outputThread);
 	}
-	
+
 	boolean isDone() {
 		log.trace("Moderator::isDone()");
 		return protocol.isDone();
 	}
-	
-	class ModeratorThread implements Runnable {
-		long pollIntervalInMs = 10;
-		volatile boolean active = true;
 
-		@Override
-		public void run() {
-			log.trace("ModeratorThread::run()");
-			
-			long timeStart = System.nanoTime();
-			
-			while (active) {
-				Collection<Message> incoming = new ArrayList<Message>();
-
-				// check protocol status
-				if(protocol.isDone()) {
-					log.info("Protocol completed");
-					return;
-				}
-				
-				// collect pending messages
-				for (Node node : nodes) {
-					inQueues.get(node).drainTo(incoming);
-				}
-				
-				// deliver messages
-				try {
-					long timeCurrent = System.nanoTime() - timeStart;
-					protocol.setTime(timeCurrent);
-					
-					for (Message message : incoming) {
-						if(! self.equals(message.getDestination())) {
-							log.error("Received {} with invalid destination at {}", message, self);
-							return;
-						}
-						
-						if(! nodes.contains(message.getSource())) {
-							log.error("Received {} from unknown source at {}", message, self);
-							return;
-						}
-						
-						protocol.put(message);
-					}
-				} catch (Exception e) {
-					log.error("Protocol error during delivery: {}", e);
-					return;
-				}
-				
-				// queue messages for sending
-				int messageCount = 0;
-				try {
-					while (protocol.hasMessage()) {
-						Message message = protocol.get();
-						
-						if(! self.equals(message.getSource())) {
-							log.error("Sent {} with invalid source at {}", message, self);
-							return;
-						}
-						
-						if(! nodes.contains(message.getDestination())) {
-							log.error("Sent {} to unknown destination at {}", message, self);
-							return;
-						}
-
-						outQueues.get(message.getDestination()).add(message);
-						messageCount++;
-					}
-				} catch (Exception e) {
-					log.error("Protocol error during sending: {}", e);
-					return;
-				}
-				
-				// poll if no activity
-				if (messageCount <= 0) {
-					try {
-						Thread.sleep(pollIntervalInMs);
-					} catch (InterruptedException e) {
-						// ignore
-					}
-				}
-			}
-		}
-		
-		void cancel() {
-			log.trace("ModeratorThread::cancel()");
-			active = false;
-		}
-	}
-	
 	class InputThread implements Runnable {
 		volatile boolean active = true;
-		
-		InputStream in;
-		Node node;
-
-		public InputThread(Node node, InputStream in) {
-			log.trace("InputThread::InputThread({}, {})", node, in);
-			this.in = in;
-			this.node = node;
-		}
 
 		@Override
 		public void run() {
 			log.trace("InputThread::run()");
 			try {
-				ObjectInputStream inObj = new ObjectInputStream(in);
-				
 				while (active) {
-					Message message = (Message) inObj.readObject();
-					log.debug("Receiving {}", message);
-					inQueues.get(node).add(message);
+					Message message = inQueue.poll(POLL_INTERVAL,
+							TimeUnit.MILLISECONDS);
+					if (message != null) {
+						log.debug("Receiving {}", message);
+						synchronized (protocol) {
+							protocol.put(message);
+						}
+					}
 				}
-			} catch (EOFException e) {
-				log.info("InputThread {} exiting due to EOF");
 			} catch (Exception e) {
-				log.error("InputThread {} encountered exception: {}", node, e);
+				log.error("InputThread {} encountered exception: {}", self, e);
 			}
 		}
 
@@ -219,32 +109,37 @@ public class Moderator {
 
 	class OutputThread implements Runnable {
 		volatile boolean active = true;
-		
-		OutputStream out;
-		Node node;
-
-		public OutputThread(Node node, OutputStream out) {
-			log.trace("OutputThread::OutputThread({}, {})", node, out);
-			this.out = out;
-			this.node = node;
-		}
 
 		@Override
 		public void run() {
 			log.trace("OutputThread::run()");
 			try {
-				ObjectOutputStream outObj = new ObjectOutputStream(out);
-				
+				long startTime = System.nanoTime();
+				long currentTime = 0;
+
 				while (active) {
-					Message message = outQueues.get(node).take();
-					log.debug("Sending {}", message);
-					outObj.writeObject(message);
-					outObj.flush();
+					synchronized (protocol) {
+						protocol.setTime(currentTime);
+						
+						while (protocol.hasMessage()) {
+							Message message = protocol.get();
+							log.debug("sending {}", message);
+							MessageEndpoint remote = endpoints.get(message
+									.getDestination());
+							
+							if(remote == null)
+								throw new Exception(String.format("Endpoint %s not known.", message.getDestination()));
+
+							remote.put(message);
+						}
+					}
+
+					Thread.sleep(POLL_INTERVAL);
+
+					currentTime = System.nanoTime() - startTime;
 				}
-			} catch (EOFException e) {
-				log.info("OutputThread {} exiting due to EOF");
 			} catch (Exception e) {
-				log.error("OutputThread {} encountered exception: {}", node, e);
+				log.error("OutputThread {} encountered exception: {}", self, e);
 			}
 		}
 
@@ -252,6 +147,16 @@ public class Moderator {
 			log.trace("OutputThread::cancel()");
 			active = false;
 		}
+	}
+
+	@Override
+	public void put(Message message) throws Exception {
+		inQueue.put(message);
+	}
+
+	@Override
+	public String getIdentifier() {
+		return self;
 	}
 
 }

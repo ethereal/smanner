@@ -2,8 +2,6 @@ package edu.ucsb.cs.smanner.protocol.paxos;
 
 import java.util.Set;
 
-import edu.ucsb.cs.smanner.net.Node;
-
 public class ProposeMessage extends PaxosMessage {
 
 	/**
@@ -11,14 +9,14 @@ public class ProposeMessage extends PaxosMessage {
 	 */
 	private static final long serialVersionUID = 5301232227010536003L;
 	
-	final Set<Node> acceptors;
+	final Set<String> acceptors;
 	
-	public ProposeMessage(Node source, Node destination, long id, Set<Node> acceptors) {
+	public ProposeMessage(String source, String destination, long id, Set<String> acceptors) {
 		super(source, destination, id);
 		this.acceptors = acceptors;
 	}
 
-	public Set<Node> getAcceptors() {
+	public Set<String> getAcceptors() {
 		return acceptors;
 	}
 

@@ -3,9 +3,7 @@ package edu.ucsb.cs.smanner.protocol;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import edu.ucsb.cs.smanner.net.Node;
-
-public class CountSender extends Protocol {
+public class CountSender extends AbstractProtocol {
 	int index;
 	int maxCount;
 	long intervalInNs;
@@ -24,7 +22,7 @@ public class CountSender extends Protocol {
 	@Override
 	public Message get() throws Exception {
 		if(outQueue.isEmpty()) {
-			for(Node node : nodes) {
+			for(String node : nodes) {
 				outQueue.add(new CountMessage(self, node, index));
 			}
 			lastTime += intervalInNs;

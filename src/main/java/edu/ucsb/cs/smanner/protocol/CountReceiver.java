@@ -6,7 +6,7 @@ import java.util.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CountReceiver extends Protocol {
+public class CountReceiver extends AbstractProtocol {
 	private Logger log = LoggerFactory.getLogger(CountReceiver.class);
 	
 	int maxCount;

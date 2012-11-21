@@ -2,9 +2,6 @@ package edu.ucsb.cs.smanner.net;
 
 import static org.junit.Assert.assertFalse;
 
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,27 +13,19 @@ import edu.ucsb.cs.smanner.protocol.CountSender;
 public class ModeratorTest {
 	private static Logger log = LoggerFactory.getLogger(ModeratorTest.class);
 	
-	Node node = new Node("id", "localhost");
+	final String node = "node";
 
-	PipedInputStream in;
-	PipedOutputStream out;
 	Moderator moderator;
 
 	@Before
 	public void setUp() throws Exception {
-		in = new PipedInputStream();
-		out = new PipedOutputStream();
-		in.connect(out);
-		
 		moderator = new Moderator(node, new CountSender(20, 10000000));
-		moderator.addNode(node, in, out);
+		moderator.addNode(moderator);
 	}
 
 	@After
 	public void tearDown() throws Exception {
 		moderator.cancel();
-		in.close();
-		out.close();
 	}
 
 	@Test(timeout = 1000)

@@ -11,10 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.ucsb.cs.smanner.protocol.Message;
-import edu.ucsb.cs.smanner.protocol.Protocol;
+import edu.ucsb.cs.smanner.protocol.AbstractProtocol;
 import edu.ucsb.cs.smanner.protocol.tpc.Transaction.TransactionState;
 
-public class TwoPhaseCommitFollower extends Protocol {
+public class TwoPhaseCommitFollower extends AbstractProtocol {
 	private static Logger log = LoggerFactory.getLogger(TwoPhaseCommitFollower.class);
 	
 	volatile boolean active = true;

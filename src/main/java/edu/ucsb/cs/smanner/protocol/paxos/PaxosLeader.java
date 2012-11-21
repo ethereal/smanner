@@ -5,11 +5,10 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 
-import edu.ucsb.cs.smanner.net.Node;
+import edu.ucsb.cs.smanner.protocol.AbstractProtocol;
 import edu.ucsb.cs.smanner.protocol.Message;
-import edu.ucsb.cs.smanner.protocol.Protocol;
 
-public class PaxosLeader extends Protocol {
+public class PaxosLeader extends AbstractProtocol {
 
 	volatile boolean active = true;
 	
@@ -40,10 +39,10 @@ public class PaxosLeader extends Protocol {
 	}
 	
 	public void addProposal(long id) {
-		Set<Node> acceptors = new HashSet<Node>(nodes);
+		Set<String> acceptors = new HashSet<String>(nodes);
 		acceptors.remove(self);
 		
-		for(Node node : nodes) {
+		for(String node : nodes) {
 			outQueue.add(new ProposeMessage(self, node, id, acceptors));
 		}
 	}

@@ -11,12 +11,11 @@ import java.util.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.ucsb.cs.smanner.net.Node;
+import edu.ucsb.cs.smanner.protocol.AbstractProtocol;
 import edu.ucsb.cs.smanner.protocol.Message;
-import edu.ucsb.cs.smanner.protocol.Protocol;
 import edu.ucsb.cs.smanner.protocol.paxos.Proposal.ProposalState;
 
-public class PaxosFollower extends Protocol {
+public class PaxosFollower extends AbstractProtocol {
 	private static Logger log = LoggerFactory.getLogger(PaxosFollower.class);
 	
 	volatile boolean active = true;
@@ -47,7 +46,7 @@ public class PaxosFollower extends Protocol {
 		proposals.put(msg.id, p);
 		
 		log.debug("{}: voting for proposal {}", self, p.id);
-		for(Node node : nodes) {
+		for(String node : nodes) {
 			outQueue.add(new AcceptMessage(self, node, p.id));
 		}
 		
@@ -62,6 +61,9 @@ public class PaxosFollower extends Protocol {
 		}
 		
 		Proposal p = proposals.get(msg.id);
+		if(p.getState() == ProposalState.ACCEPTED)
+			return;
+		
 		p.accept(msg.getSource());
 		
 		if(p.getState() == ProposalState.ACCEPTED) {
