@@ -26,7 +26,7 @@ public class SpringPaxosTest {
 	public void setUp() throws Exception {
 		committed = false;
 
-		context = TestUtil.createContext("/META-INF/spring/A.xml");
+		context = TestUtil.createContext("/META-INF/spring/pgA-all.xml");
 		leader = (PaxosLeader) context.getBean("protocolAL");
 		follower = (PaxosFollower) context.getBean("protocolA3");
 
