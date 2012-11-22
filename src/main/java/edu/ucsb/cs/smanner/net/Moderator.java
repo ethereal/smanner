@@ -1,5 +1,6 @@
 package edu.ucsb.cs.smanner.net;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.ucsb.cs.smanner.protocol.Message;
-import edu.ucsb.cs.smanner.protocol.MessageEndpoint;
 import edu.ucsb.cs.smanner.protocol.Protocol;
 
 public class Moderator implements MessageEndpoint {
@@ -41,13 +41,6 @@ public class Moderator implements MessageEndpoint {
 		log.trace("Moderator::addIdentifier({}, {})", new Object[] {
 				endpoint.getIdentifier(), endpoint });
 		endpoints.put(endpoint.getIdentifier(), endpoint);
-
-		log.trace("Moderator::addIdentifier::createQueues");
-		inQueue = new LinkedBlockingQueue<Message>();
-
-		log.trace("Moderator::addIdentifier::createThreads");
-		inputThread = new InputThread();
-		outputThread = new OutputThread();
 	}
 
 	void cancel() {
@@ -65,6 +58,13 @@ public class Moderator implements MessageEndpoint {
 	void run() {
 		log.trace("Moderator::run()");
 		executor = Executors.newFixedThreadPool(2);
+
+		log.trace("Moderator::addIdentifier::createQueues");
+		inQueue = new LinkedBlockingQueue<Message>();
+
+		log.trace("Moderator::addIdentifier::createThreads");
+		inputThread = new InputThread();
+		outputThread = new OutputThread();
 
 		protocol.setTime(0);
 		protocol.setNodes(Collections.unmodifiableSet(endpoints.keySet()));
@@ -157,6 +157,14 @@ public class Moderator implements MessageEndpoint {
 	@Override
 	public String getIdentifier() {
 		return self;
+	}
+	
+	public void setNodes(Collection<MessageEndpoint> endpoints) {
+		for(MessageEndpoint endpoint : endpoints) {
+			String identifier = endpoint.getIdentifier();
+			log.debug("adding at {} endpoint {}", self, identifier);
+			this.endpoints.put(identifier, endpoint);
+		}
 	}
 
 }

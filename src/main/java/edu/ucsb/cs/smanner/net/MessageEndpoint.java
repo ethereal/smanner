@@ -1,4 +1,6 @@
-package edu.ucsb.cs.smanner.protocol;
+package edu.ucsb.cs.smanner.net;
+
+import edu.ucsb.cs.smanner.protocol.Message;
 
 
 public interface MessageEndpoint {
