@@ -57,19 +57,21 @@ public class Moderator implements MessageEndpoint {
 
 	void run() {
 		log.trace("Moderator::run()");
-		executor = Executors.newFixedThreadPool(2);
-
-		log.trace("Moderator::addIdentifier::createQueues");
+		
+		log.trace("Moderator::createQueues");
 		inQueue = new LinkedBlockingQueue<Message>();
 
-		log.trace("Moderator::addIdentifier::createThreads");
+		log.trace("Moderator::createThreads");
 		inputThread = new InputThread();
 		outputThread = new OutputThread();
 
+		log.trace("Moderator::createThreads");
 		protocol.setTime(0);
 		protocol.setNodes(Collections.unmodifiableSet(endpoints.keySet()));
 		protocol.setSelf(self);
 
+		log.trace("Moderator::createThreads");
+		executor = Executors.newFixedThreadPool(2);
 		executor.execute(inputThread);
 		executor.execute(outputThread);
 	}
