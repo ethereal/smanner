@@ -1,0 +1,37 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-3.1.xsd
+	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.5.xsd">
+
+	<bean id="pgAL" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://localhost/paxosServiceAL" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="pgA1" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://localhost/paxosServiceA1" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="pgA2" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://localhost/paxosServiceA2" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="pgA3" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://localhost/paxosServiceA3" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<util:set id="pgA">
+		<ref bean="pgAL" />
+		<ref bean="pgA1" />
+		<ref bean="pgA2" />
+		<ref bean="pgA3" />
+	</util:set>
+
+</beans>

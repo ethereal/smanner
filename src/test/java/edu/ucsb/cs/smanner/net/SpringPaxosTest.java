@@ -37,6 +37,7 @@ public class SpringPaxosTest {
 			}
 		});
 
+		@SuppressWarnings("unchecked")
 		Collection<MessageEndpoint> endpoints = (Collection<MessageEndpoint>) context.getBean("pgA");
 		Map<String, Moderator> moderators = (Map<String, Moderator>) context.getBeansOfType(Moderator.class);
 
@@ -52,12 +53,12 @@ public class SpringPaxosTest {
 		context.close();
 	}
 
-	@Test(timeout = 1000)
+	@Test(timeout = 5000)
 	public void testStartup() {
 		// nothing here
 	}
 
-	@Test
+	@Test(timeout = 5000)
 	public void testCommit() throws Exception {
 		leader.addProposal(0);
 		while (!committed) {
