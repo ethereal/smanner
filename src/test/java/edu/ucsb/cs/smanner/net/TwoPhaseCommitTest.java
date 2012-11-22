@@ -14,7 +14,7 @@ import edu.ucsb.cs.smanner.protocol.tpc.Transaction;
 import edu.ucsb.cs.smanner.protocol.tpc.Transaction.TransactionState;
 import edu.ucsb.cs.smanner.protocol.tpc.TransactionListener;
 import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitCoordinator;
-import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitFollower;
+import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitParticipant;
 
 public class TwoPhaseCommitTest {
 	private static Logger log = LoggerFactory.getLogger(TwoPhaseCommitTest.class);
@@ -28,14 +28,14 @@ public class TwoPhaseCommitTest {
 	Moderator receiverC;
 	
 	TwoPhaseCommitCoordinator coordA;
-	TwoPhaseCommitFollower followB;
-	TwoPhaseCommitFollower followC;
+	TwoPhaseCommitParticipant followB;
+	TwoPhaseCommitParticipant followC;
 
 	@Before
 	public void setUp() throws Exception {
 		coordA = new TwoPhaseCommitCoordinator();
-		followB = new TwoPhaseCommitFollower();
-		followC = new TwoPhaseCommitFollower();
+		followB = new TwoPhaseCommitParticipant();
+		followC = new TwoPhaseCommitParticipant();
 		
 		followB.addListener(new TransactionListener() {
 			@Override

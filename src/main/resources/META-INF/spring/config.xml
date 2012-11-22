@@ -47,18 +47,18 @@
 		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
 	</bean>
 
-	<bean id="tpcC" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
-		<property name="serviceUrl" value="rmi://localhost/tpcServiceC" />
+	<bean id="tpcL" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://localhost/tpcServiceL" />
 		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
 	</bean>
 
-	<bean id="tpc1" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
-		<property name="serviceUrl" value="rmi://localhost/tpcService1" />
+	<bean id="tpcA" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://localhost/tpcServiceA" />
 		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
 	</bean>
 
-	<bean id="tpc2" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
-		<property name="serviceUrl" value="rmi://localhost/tpcService2" />
+	<bean id="tpcB" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://localhost/tpcServiceB" />
 		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
 	</bean>
 
@@ -77,9 +77,9 @@
 	</util:set>
 
 	<util:set id="tpc">
-		<ref bean="tpcC" />
-		<ref bean="tpc1" />
-		<ref bean="tpc2" />
+		<ref bean="tpcL" />
+		<ref bean="tpcA" />
+		<ref bean="tpcB" />
 	</util:set>
 
 </beans>

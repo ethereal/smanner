@@ -46,16 +46,16 @@
 		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
 	</bean>
 
-	<bean id="protocolTpc1" class="edu.ucsb.cs.smanner.protocol.paxos.PaxosFollower" />
+	<bean id="protocolTpcA" class="edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitParticipant" />
 
-	<bean id="serverTpc1" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
-		<constructor-arg name="self" value="tpc1" />
-		<constructor-arg name="protocol" ref="protocolTpc1" />
+	<bean id="serverTpcA" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
+		<constructor-arg name="self" value="tpcA" />
+		<constructor-arg name="protocol" ref="protocolTpcA" />
 	</bean>
 
-	<bean id="exporterTpc1" class="org.springframework.remoting.rmi.RmiServiceExporter">
-		<property name="service" ref="serverTpc1" />
-		<property name="serviceName" value="tpcService1" />
+	<bean id="exporterTpcA" class="org.springframework.remoting.rmi.RmiServiceExporter">
+		<property name="service" ref="serverTpcA" />
+		<property name="serviceName" value="tpcServiceA" />
 		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
 	</bean>
 </beans>

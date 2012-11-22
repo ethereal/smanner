@@ -18,7 +18,7 @@ import edu.ucsb.cs.smanner.protocol.tpc.Transaction;
 import edu.ucsb.cs.smanner.protocol.tpc.Transaction.TransactionState;
 import edu.ucsb.cs.smanner.protocol.tpc.TransactionListener;
 import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitCoordinator;
-import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitFollower;
+import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitParticipant;
 
 public class SmallSpannerTest {
 	private static Logger log = LoggerFactory.getLogger(SmallSpannerTest.class);
@@ -61,8 +61,8 @@ public class SmallSpannerTest {
 	Moderator mFollowB;
 	
 	TwoPhaseCommitCoordinator tpcCoord;
-	TwoPhaseCommitFollower tpcFA;
-	TwoPhaseCommitFollower tpcFB;
+	TwoPhaseCommitParticipant tpcFA;
+	TwoPhaseCommitParticipant tpcFB;
 	
 	@Before
 	public void setUp() throws Exception {
@@ -111,8 +111,8 @@ public class SmallSpannerTest {
 		
 		// 2PC Group
 		tpcCoord = new TwoPhaseCommitCoordinator();
-		tpcFA = new TwoPhaseCommitFollower();
-		tpcFB = new TwoPhaseCommitFollower();
+		tpcFA = new TwoPhaseCommitParticipant();
+		tpcFB = new TwoPhaseCommitParticipant();
 		mCoord = new Moderator(nodeCoord, tpcCoord);
 		mFollowA = new Moderator(nodeFollowA, tpcFA);
 		mFollowB = new Moderator(nodeFollowB, tpcFB);

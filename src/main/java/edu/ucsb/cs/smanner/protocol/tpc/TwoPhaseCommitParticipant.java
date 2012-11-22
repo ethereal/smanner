@@ -14,8 +14,8 @@ import edu.ucsb.cs.smanner.protocol.Message;
 import edu.ucsb.cs.smanner.protocol.AbstractProtocol;
 import edu.ucsb.cs.smanner.protocol.tpc.Transaction.TransactionState;
 
-public class TwoPhaseCommitFollower extends AbstractProtocol {
-	private static Logger log = LoggerFactory.getLogger(TwoPhaseCommitFollower.class);
+public class TwoPhaseCommitParticipant extends AbstractProtocol {
+	private static Logger log = LoggerFactory.getLogger(TwoPhaseCommitParticipant.class);
 	
 	volatile boolean active = true;
 	
@@ -27,7 +27,7 @@ public class TwoPhaseCommitFollower extends AbstractProtocol {
 
 	@Override
 	public void put(Message message) throws Exception {
-		log.trace("TwoPhaseCommitFollower::put({})", message);
+		log.trace("TwoPhaseCommitParticipant::put({})", message);
 		if(message instanceof PrepareMessage) {
 			PrepareMessage msg = (PrepareMessage)message;
 			
@@ -57,13 +57,13 @@ public class TwoPhaseCommitFollower extends AbstractProtocol {
 
 	@Override
 	public Message get() throws Exception {
-		log.trace("TwoPhaseCommitFollower::get()");
+		log.trace("TwoPhaseCommitParticipant::get()");
 		return outQueue.poll();
 	}
 
 	@Override
 	public boolean hasMessage() {
-		log.trace("TwoPhaseCommitFollower::hasMessage()");
+		log.trace("TwoPhaseCommitParticipant::hasMessage()");
 		return !outQueue.isEmpty();
 	}
 
