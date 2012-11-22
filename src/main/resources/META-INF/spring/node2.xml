@@ -1,0 +1,74 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-3.1.xsd
+	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.5.xsd">
+
+	<bean id="protocolA2" class="edu.ucsb.cs.smanner.protocol.paxos.PaxosFollower" />
+
+	<bean id="serverA2" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
+		<constructor-arg name="self" value="pgA2" />
+		<constructor-arg name="protocol" ref="protocolA2" />
+	</bean>
+
+	<bean id="exporterA2" class="org.springframework.remoting.rmi.RmiServiceExporter">
+		<property name="service" ref="serverA2" />
+		<property name="serviceName" value="paxosServiceA2" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="protocolBL" class="edu.ucsb.cs.smanner.protocol.paxos.PaxosLeader" />
+
+	<bean id="serverBL" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
+		<constructor-arg name="self" value="pgBL" />
+		<constructor-arg name="protocol" ref="protocolBL" />
+	</bean>
+
+	<bean id="exporterBL" class="org.springframework.remoting.rmi.RmiServiceExporter">
+		<property name="service" ref="serverBL" />
+		<property name="serviceName" value="paxosServiceBL" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="protocolB2" class="edu.ucsb.cs.smanner.protocol.paxos.PaxosFollower" />
+
+	<bean id="serverB2" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
+		<constructor-arg name="self" value="pgB2" />
+		<constructor-arg name="protocol" ref="protocolB2" />
+	</bean>
+
+	<bean id="exporterB2" class="org.springframework.remoting.rmi.RmiServiceExporter">
+		<property name="service" ref="serverB2" />
+		<property name="serviceName" value="paxosServiceB2" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="protocolTpc2" class="edu.ucsb.cs.smanner.protocol.paxos.PaxosFollower" />
+
+	<bean id="serverTpc2" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
+		<constructor-arg name="self" value="tpc2" />
+		<constructor-arg name="protocol" ref="protocolTpc2" />
+	</bean>
+
+	<bean id="exporterTpc2" class="org.springframework.remoting.rmi.RmiServiceExporter">
+		<property name="service" ref="serverTpc2" />
+		<property name="serviceName" value="tpcService2" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="protocolTpcC" class="edu.ucsb.cs.smanner.protocol.paxos.PaxosFollower" />
+
+	<bean id="serverTpcC" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
+		<constructor-arg name="self" value="tpcC" />
+		<constructor-arg name="protocol" ref="protocolTpcC" />
+	</bean>
+
+	<bean id="exporterTpcC" class="org.springframework.remoting.rmi.RmiServiceExporter">
+		<property name="service" ref="serverTpcC" />
+		<property name="serviceName" value="tpcServiceC" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+</beans>

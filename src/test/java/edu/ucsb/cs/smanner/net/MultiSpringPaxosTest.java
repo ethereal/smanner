@@ -30,10 +30,10 @@ public class MultiSpringPaxosTest {
 	public void setUp() throws Exception {
 		committed = false;
 
-		context1 = TestUtil.createContext("/META-INF/spring/pgA1.xml");
-		context2 = TestUtil.createContext("/META-INF/spring/pgA2.xml");
-		context3 = TestUtil.createContext("/META-INF/spring/pgA3.xml");
-		contextConfig = TestUtil.createContext("/META-INF/spring/pgA-config.xml");
+		context1 = TestUtil.createContext("/META-INF/spring/node1.xml");
+		context2 = TestUtil.createContext("/META-INF/spring/node2.xml");
+		context3 = TestUtil.createContext("/META-INF/spring/node3.xml");
+		contextConfig = TestUtil.createContext("/META-INF/spring/config.xml");
 		
 		leader = (PaxosLeader) context1.getBean("protocolAL");
 		follower = (PaxosFollower) context1.getBean("protocolA1");

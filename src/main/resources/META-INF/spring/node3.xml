@@ -9,7 +9,7 @@
 
 	<bean id="protocolA3" class="edu.ucsb.cs.smanner.protocol.paxos.PaxosFollower" />
 
-	<bean id="serverA3" class="edu.ucsb.cs.smanner.net.Moderator">
+	<bean id="serverA3" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
 		<constructor-arg name="self" value="pgA3" />
 		<constructor-arg name="protocol" ref="protocolA3" />
 	</bean>
@@ -17,6 +17,19 @@
 	<bean id="exporterA3" class="org.springframework.remoting.rmi.RmiServiceExporter">
 		<property name="service" ref="serverA3" />
 		<property name="serviceName" value="paxosServiceA3" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="protocolB3" class="edu.ucsb.cs.smanner.protocol.paxos.PaxosFollower" />
+
+	<bean id="serverB3" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
+		<constructor-arg name="self" value="pgB3" />
+		<constructor-arg name="protocol" ref="protocolB3" />
+	</bean>
+
+	<bean id="exporterB3" class="org.springframework.remoting.rmi.RmiServiceExporter">
+		<property name="service" ref="serverB3" />
+		<property name="serviceName" value="paxosServiceB3" />
 		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
 	</bean>
 </beans>

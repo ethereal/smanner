@@ -9,7 +9,7 @@
 
 	<bean id="protocolAL" class="edu.ucsb.cs.smanner.protocol.paxos.PaxosLeader" />
 
-	<bean id="serverAL" class="edu.ucsb.cs.smanner.net.Moderator">
+	<bean id="serverAL" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
 		<constructor-arg name="self" value="pgAL" />
 		<constructor-arg name="protocol" ref="protocolAL" />
 	</bean>
@@ -22,7 +22,7 @@
 
 	<bean id="protocolA1" class="edu.ucsb.cs.smanner.protocol.paxos.PaxosFollower" />
 
-	<bean id="serverA1" class="edu.ucsb.cs.smanner.net.Moderator">
+	<bean id="serverA1" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
 		<constructor-arg name="self" value="pgA1" />
 		<constructor-arg name="protocol" ref="protocolA1" />
 	</bean>
@@ -30,6 +30,32 @@
 	<bean id="exporterA1" class="org.springframework.remoting.rmi.RmiServiceExporter">
 		<property name="service" ref="serverA1" />
 		<property name="serviceName" value="paxosServiceA1" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="protocolB1" class="edu.ucsb.cs.smanner.protocol.paxos.PaxosFollower" />
+
+	<bean id="serverB1" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
+		<constructor-arg name="self" value="pgB1" />
+		<constructor-arg name="protocol" ref="protocolA1" />
+	</bean>
+
+	<bean id="exporterB1" class="org.springframework.remoting.rmi.RmiServiceExporter">
+		<property name="service" ref="serverB1" />
+		<property name="serviceName" value="paxosServiceB1" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="protocolTpc1" class="edu.ucsb.cs.smanner.protocol.paxos.PaxosFollower" />
+
+	<bean id="serverTpc1" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
+		<constructor-arg name="self" value="tpc1" />
+		<constructor-arg name="protocol" ref="protocolTpc1" />
+	</bean>
+
+	<bean id="exporterTpc1" class="org.springframework.remoting.rmi.RmiServiceExporter">
+		<property name="service" ref="serverTpc1" />
+		<property name="serviceName" value="tpcService1" />
 		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
 	</bean>
 </beans>
