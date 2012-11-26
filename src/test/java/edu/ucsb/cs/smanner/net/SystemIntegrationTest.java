@@ -1,26 +1,26 @@
 package edu.ucsb.cs.smanner.net;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
 
+import edu.ucsb.cs.smanner.protocol.Operation;
 import edu.ucsb.cs.smanner.protocol.paxos.PaxosFollower;
 import edu.ucsb.cs.smanner.protocol.paxos.PaxosLeader;
-import edu.ucsb.cs.smanner.protocol.paxos.Proposal;
 import edu.ucsb.cs.smanner.protocol.paxos.ProposalListener;
-import edu.ucsb.cs.smanner.protocol.tpc.Transaction;
 import edu.ucsb.cs.smanner.protocol.tpc.Transaction.TransactionState;
 import edu.ucsb.cs.smanner.protocol.tpc.TransactionListener;
 import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitCoordinator;
 import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitParticipant;
 
 public class SystemIntegrationTest {
+	private static Logger log = LoggerFactory.getLogger(SystemIntegrationTest.class);
 
 	AbstractApplicationContext context1;
 	AbstractApplicationContext context2;
@@ -53,13 +53,16 @@ public class SystemIntegrationTest {
 		followerA = (PaxosFollower) context1.getBean("protocolA1");
 		followerA.addListener(new ProposalListener() {
 			@Override
-			public void notifyCommit(Proposal proposal) {
-				if(proposal.getId() % 10 == 0) {
+			public void notify(long id, Operation operation) {
+				log.debug("notified Paxos Group B");
+				if(operation instanceof PaxosPrepareOperation) {
 					// prepare
-					participantA.prepareTransaction(proposal.getId() / 10);
-				} else {
+					participantA.prepareTransaction(((PaxosPrepareOperation) operation).transactionId);
+				} else if(operation instanceof PaxosCommitOperation) {
 					// commit
-					participantA.commitTransaction(proposal.getId() / 10);
+					participantA.commitTransaction(((PaxosCommitOperation) operation).transactionId);
+				} else {
+					log.error("unknown operation {}", operation.getId());
 				}
 			}
 		});
@@ -69,13 +72,16 @@ public class SystemIntegrationTest {
 		followerB = (PaxosFollower) context2.getBean("protocolB2");
 		followerB.addListener(new ProposalListener() {
 			@Override
-			public void notifyCommit(Proposal proposal) {
-				if(proposal.getId() % 10 == 0) {
+			public void notify(long id, Operation operation) {
+				log.debug("notified Paxos Group B");
+				if(operation instanceof PaxosPrepareOperation) {
 					// prepare
-					participantB.prepareTransaction(proposal.getId() / 10);
-				} else {
+					participantB.prepareTransaction(((PaxosPrepareOperation) operation).transactionId);
+				} else if(operation instanceof PaxosCommitOperation) {
 					// commit
-					participantB.commitTransaction(proposal.getId() / 10);
+					participantB.commitTransaction(((PaxosCommitOperation) operation).transactionId);
+				} else {
+					log.error("unknown operation {}", operation.getId());
 				}
 			}
 		});
@@ -86,29 +92,29 @@ public class SystemIntegrationTest {
 		participantA = (TwoPhaseCommitParticipant) context1.getBean("protocolTpcA");
 		participantA.addListener(new TransactionListener() {
 			@Override
-			public void notifyPrepare(Transaction transaction) {
-				leaderA.addProposal(transaction.getId() * 10);
+			public void notifyPrepare(long id, Operation operation) {
+				leaderA.addProposal(new PaxosPrepareOperation(operation.getId(), id));
 			}
-			public void notifyCommit(Transaction transaction) {
-				leaderA.addProposal(transaction.getId() * 10 + 1);
+			public void notifyCommit(long id, Operation operation) {
+				leaderA.addProposal(new PaxosCommitOperation(operation.getId(), id));
 			}
 		});
 		
 		participantB = (TwoPhaseCommitParticipant) context2.getBean("protocolTpcB");
 		participantB.addListener(new TransactionListener() {
 			@Override
-			public void notifyPrepare(Transaction transaction) {
-				leaderB.addProposal(transaction.getId() * 10);
+			public void notifyPrepare(long id, Operation operation) {
+				leaderB.addProposal(new PaxosPrepareOperation(operation.getId(), id));
 			}
-			public void notifyCommit(Transaction transaction) {
-				leaderB.addProposal(transaction.getId() * 10 + 1);
+			public void notifyCommit(long id, Operation operation) {
+				leaderB.addProposal(new PaxosCommitOperation(operation.getId(), id));
 			}
 		});
 		
 
 		followerA.addListener(new ProposalListener() {
 			@Override
-			public void notifyCommit(Proposal proposal) {
+			public void notify(long id, Operation operation) {
 				committed = true;
 			}
 		});
@@ -143,12 +149,8 @@ public class SystemIntegrationTest {
 
 	@Test(timeout = 5000)
 	public void testCommit() throws Exception {
-		Set<String> participants = new HashSet<String>();
-		participants.add("tpcA");
-		participants.add("tpcB");
-		
-		coordinator.addTransaction(new Transaction(0, "tpcL", participants));
-		while (coordinator.getTransaction(0).getState() != TransactionState.COMMITTED) {
+		long id = coordinator.addTransaction(new NullOperation("one"));
+		while (coordinator.getTransaction(id).getState() != TransactionState.COMMITTED) {
 			Thread.sleep(100);
 		}
 	}
@@ -160,6 +162,34 @@ public class SystemIntegrationTest {
 		
 		moderator.setNodes(endpoints);
 		moderator.run();
+	}
+
+	@SuppressWarnings("serial")
+	static class PaxosCommitOperation extends Operation {
+		final long transactionId;
+		
+		public PaxosCommitOperation(String id, long transactionId) {
+			super(id);
+			this.transactionId = transactionId;
+		}
+
+		public long getTransactionId() {
+			return transactionId;
+		}
+	}
+
+	@SuppressWarnings("serial")
+	static class PaxosPrepareOperation extends Operation {
+		final long transactionId;
+
+		public PaxosPrepareOperation(String id, long transactionId) {
+			super(id);
+			this.transactionId = transactionId;
+		}
+
+		public long getTransactionId() {
+			return transactionId;
+		}
 	}
 
 }

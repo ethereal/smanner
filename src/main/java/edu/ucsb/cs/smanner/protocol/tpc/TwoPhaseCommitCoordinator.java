@@ -1,19 +1,24 @@
 package edu.ucsb.cs.smanner.protocol.tpc;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.ucsb.cs.smanner.protocol.AbstractProtocol;
 import edu.ucsb.cs.smanner.protocol.Message;
+import edu.ucsb.cs.smanner.protocol.Operation;
 import edu.ucsb.cs.smanner.protocol.tpc.Transaction.TransactionState;
 
 public class TwoPhaseCommitCoordinator extends AbstractProtocol {
 	private static Logger log = LoggerFactory.getLogger(TwoPhaseCommitCoordinator.class);
+	
+	int nextId = 0;
 	volatile boolean active = true;
 
 	Queue<Message> outQueue = new LinkedList<Message>();
@@ -64,12 +69,22 @@ public class TwoPhaseCommitCoordinator extends AbstractProtocol {
 		active = false;
 	}
 	
-	public void addTransaction(Transaction t) {
-		log.debug("add transaction {}", t.id);
-		transactions.put(t.id, t);
-		for(String follower : t.followers) {
-			outQueue.add(new PrepareMessage(self, follower, t.id));
+	public int addTransaction(Operation operation) {
+		int id = nextId;
+		nextId++;
+		
+		Set<String> followers = new HashSet<String>();
+		followers.addAll(nodes);
+		followers.remove(self);
+		
+		log.debug("add transaction {}", id);
+		transactions.put((long)id, new Transaction(id, self, followers));
+		
+		for(String follower : followers) {
+			outQueue.add(new PrepareMessage(self, follower, id, operation));
 		}
+		
+		return id;
 	}
 	
 	public Transaction getTransaction(long id) {

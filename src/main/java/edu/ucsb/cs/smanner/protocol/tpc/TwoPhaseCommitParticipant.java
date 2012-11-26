@@ -10,8 +10,9 @@ import java.util.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.ucsb.cs.smanner.protocol.Message;
 import edu.ucsb.cs.smanner.protocol.AbstractProtocol;
+import edu.ucsb.cs.smanner.protocol.Message;
+import edu.ucsb.cs.smanner.protocol.Operation;
 import edu.ucsb.cs.smanner.protocol.tpc.Transaction.TransactionState;
 
 public class TwoPhaseCommitParticipant extends AbstractProtocol {
@@ -35,10 +36,11 @@ public class TwoPhaseCommitParticipant extends AbstractProtocol {
 				throw new Exception("Transaction ID already exists");
 			
 			Transaction t = new Transaction(msg.id, msg.getSource());
+			t.setOperation(msg.operation);
 			
 			log.debug("{}: Try prepare transaction {}", self, t.id);
 			transactions.put(msg.id, t);
-			notifyListenersPrepare(t);
+			notifyListenersPrepare(t.id, t.operation);
 			
 		} else if(message instanceof CommitMessage) {
 			CommitMessage msg = (CommitMessage)message;
@@ -49,7 +51,7 @@ public class TwoPhaseCommitParticipant extends AbstractProtocol {
 			Transaction t = transactions.get(msg.id);
 			
 			log.debug("{}: Try commit transaction {}", self, t.id);
-			notifyListenersCommit(t);
+			notifyListenersCommit(t.id, t.operation);
 		} else {
 			throw new Exception(String.format("unexpected message type %s", message.getClass()));
 		}
@@ -97,15 +99,15 @@ public class TwoPhaseCommitParticipant extends AbstractProtocol {
 		listeners.add(listener);
 	}
 	
-	void notifyListenersPrepare(Transaction t) {
+	void notifyListenersPrepare(long id, Operation operation) {
 		for(TransactionListener l : listeners) {
-			l.notifyPrepare(t);
+			l.notifyPrepare(id, operation);
 		}
 	}
 
-	void notifyListenersCommit(Transaction t) {
+	void notifyListenersCommit(long id, Operation operation) {
 		for(TransactionListener l : listeners) {
-			l.notifyCommit(t);
+			l.notifyCommit(id, operation);
 		}
 	}
 

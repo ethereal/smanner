@@ -8,9 +8,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.context.support.AbstractApplicationContext;
 
+import edu.ucsb.cs.smanner.protocol.Operation;
 import edu.ucsb.cs.smanner.protocol.paxos.PaxosFollower;
 import edu.ucsb.cs.smanner.protocol.paxos.PaxosLeader;
-import edu.ucsb.cs.smanner.protocol.paxos.Proposal;
 import edu.ucsb.cs.smanner.protocol.paxos.ProposalListener;
 
 public class SpringPaxosTest {
@@ -32,7 +32,7 @@ public class SpringPaxosTest {
 
 		follower.addListener(new ProposalListener() {
 			@Override
-			public void notifyCommit(Proposal proposal) {
+			public void notify(long id, Operation operation) {
 				committed = true;
 			}
 		});
@@ -60,7 +60,7 @@ public class SpringPaxosTest {
 
 	@Test(timeout = 5000)
 	public void testCommit() throws Exception {
-		leader.addProposal(0);
+		leader.addProposal(new NullOperation("null"));
 		while (!committed) {
 			Thread.sleep(100);
 		}

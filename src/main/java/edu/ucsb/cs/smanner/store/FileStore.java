@@ -17,7 +17,7 @@ public class FileStore {
 		this.file = file;
 	}
 
-	void append(String line) throws Exception {
+	public void append(String line) throws Exception {
 		FileWriter writer = new FileWriter(file, true);
 		writer.append(line);
 		writer.append("\n");
@@ -25,7 +25,7 @@ public class FileStore {
 		writer.close();
 	}
 	
-	String read() throws Exception {
+	public String read() throws Exception {
 		BufferedReader reader = new BufferedReader(new FileReader(file));
 		StringBuilder sb = new StringBuilder();
 		

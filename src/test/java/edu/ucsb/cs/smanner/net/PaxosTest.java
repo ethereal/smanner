@@ -1,5 +1,7 @@
 package edu.ucsb.cs.smanner.net;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.util.Arrays;
 
 import org.junit.After;
@@ -54,6 +56,26 @@ public class PaxosTest {
 	}
 
 	@Test(timeout = 1000)
+	public void testOperationHanddown() throws Exception {
+		log.trace("PaxosTest::testCommit()");
+
+		serverL.run();
+		serverA.run();
+		serverB.run();
+		serverC.run();
+		
+		long id = leader.addProposal(new NullOperation("one"));
+		
+		while(isProposalPending(id)) {
+			Thread.sleep(100);
+		}
+		
+		assertNotNull(followA.getProposal(id).getOperation());
+		assertNotNull(followB.getProposal(id).getOperation());
+		assertNotNull(followC.getProposal(id).getOperation());
+	}
+	
+	@Test(timeout = 1000)
 	public void testCommit() throws Exception {
 		log.trace("PaxosTest::testCommit()");
 
@@ -62,13 +84,35 @@ public class PaxosTest {
 		serverB.run();
 		serverC.run();
 		
-		leader.addProposal(0);
+		long id = leader.addProposal(new NullOperation("one"));
 		
-		while(followA.getProposal(0) == null || followA.getProposal(0).getState() != ProposalState.ACCEPTED ||
-			  followB.getProposal(0) == null || followB.getProposal(0).getState() != ProposalState.ACCEPTED ||
-			  followC.getProposal(0) == null || followC.getProposal(0).getState() != ProposalState.ACCEPTED) {
+		while(isProposalPending(id)) {
 			Thread.sleep(100);
 		}
+	}
+	
+	@Test(timeout = 1000)
+	public void testMultiCommit() throws Exception {
+		log.trace("PaxosTest::testCommit()");
+
+		serverL.run();
+		serverA.run();
+		serverB.run();
+		serverC.run();
+		
+		long id1 = leader.addProposal(new NullOperation("one"));
+		long id2 = leader.addProposal(new NullOperation("two"));
+		long id3 = leader.addProposal(new NullOperation("three"));
+		
+		while(isProposalPending(id1) || isProposalPending(id2) || isProposalPending(id3)) {
+			Thread.sleep(100);
+		}
+	}
+	
+	boolean isProposalPending(long id) {
+		return (followA.getProposal(id) == null || followA.getProposal(id).getState() != ProposalState.ACCEPTED ||
+				followB.getProposal(id) == null || followB.getProposal(id).getState() != ProposalState.ACCEPTED ||
+				followC.getProposal(id) == null || followC.getProposal(id).getState() != ProposalState.ACCEPTED);
 	}
 	
 	// TODO fix test
@@ -81,10 +125,10 @@ public class PaxosTest {
 		serverB.run();
 		// C missing
 		
-		leader.addProposal(0);
+		long id = leader.addProposal(new NullOperation("one"));
 		
-		while(followA.getProposal(0) == null || followA.getProposal(0).getState() != ProposalState.ACCEPTED ||
-			  followB.getProposal(0) == null || followB.getProposal(0).getState() != ProposalState.ACCEPTED) {
+		while(followA.getProposal(id) == null || followA.getProposal(id).getState() != ProposalState.ACCEPTED ||
+			  followB.getProposal(id) == null || followB.getProposal(id).getState() != ProposalState.ACCEPTED) {
 			Thread.sleep(100);
 		}
 	}

@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.ucsb.cs.smanner.protocol.AbstractProtocol;
 import edu.ucsb.cs.smanner.protocol.Message;
+import edu.ucsb.cs.smanner.protocol.Operation;
 import edu.ucsb.cs.smanner.protocol.paxos.Proposal.ProposalState;
 
 public class PaxosFollower extends AbstractProtocol {
@@ -43,6 +44,7 @@ public class PaxosFollower extends AbstractProtocol {
 			throw new Exception(String.format("Proposal %d already exists", msg.id));
 		
 		Proposal p = new Proposal(msg.id, msg.acceptors);
+		p.setOperation(msg.operation);
 		proposals.put(msg.id, p);
 		
 		log.debug("{}: voting for proposal {}", self, p.id);
@@ -68,7 +70,7 @@ public class PaxosFollower extends AbstractProtocol {
 		
 		if(p.getState() == ProposalState.ACCEPTED) {
 			log.debug("{}: accepted proposal {}", self, p.id);
-			notifyListeners(p);
+			notifyListeners(p.id, p.operation);
 		}
 	}
 	
@@ -110,9 +112,9 @@ public class PaxosFollower extends AbstractProtocol {
 		listeners.add(listener);
 	}
 	
-	void notifyListeners(Proposal p) {
+	void notifyListeners(long id, Operation operation) {
 		for(ProposalListener l : listeners) {
-			l.notifyCommit(p);
+			l.notify(id, operation);
 		}
 	}
 }

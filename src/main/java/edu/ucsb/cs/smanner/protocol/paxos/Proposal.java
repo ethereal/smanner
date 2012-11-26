@@ -3,6 +3,8 @@ package edu.ucsb.cs.smanner.protocol.paxos;
 import java.util.HashSet;
 import java.util.Set;
 
+import edu.ucsb.cs.smanner.protocol.Operation;
+
 
 public class Proposal {
 	public enum ProposalState {
@@ -15,6 +17,8 @@ public class Proposal {
 	
 	ProposalState state;
 	Set<String> acceptedNodes = new HashSet<String>();
+	
+	Operation operation;
 
 	public Proposal(long id, Set<String> acceptors) {
 		this.id = id;
@@ -54,7 +58,13 @@ public class Proposal {
 	public Set<String> getAcceptors() {
 		return acceptors;
 	}
-	
-	
+
+	public Operation getOperation() {
+		return operation;
+	}
+
+	public void setOperation(Operation operation) {
+		this.operation = operation;
+	}
 	
 }

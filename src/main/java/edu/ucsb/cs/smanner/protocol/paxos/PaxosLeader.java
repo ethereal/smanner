@@ -7,9 +7,11 @@ import java.util.Set;
 
 import edu.ucsb.cs.smanner.protocol.AbstractProtocol;
 import edu.ucsb.cs.smanner.protocol.Message;
+import edu.ucsb.cs.smanner.protocol.Operation;
 
 public class PaxosLeader extends AbstractProtocol {
 
+	long nextId = 0;
 	volatile boolean active = true;
 	
 	Queue<Message> outQueue = new LinkedList<Message>();
@@ -38,13 +40,18 @@ public class PaxosLeader extends AbstractProtocol {
 		active = false;
 	}
 	
-	public void addProposal(long id) {
+	public long addProposal(Operation operation) {
 		Set<String> acceptors = new HashSet<String>(nodes);
 		acceptors.remove(self);
+
+		long id = nextId;
+		nextId++;
 		
 		for(String node : nodes) {
-			outQueue.add(new ProposeMessage(self, node, id, acceptors));
+			outQueue.add(new ProposeMessage(self, node, id, acceptors, operation));
 		}
+		
+		return id;
 	}
 
 }

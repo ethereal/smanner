@@ -3,21 +3,22 @@ package edu.ucsb.cs.smanner.protocol.tpc;
 import java.util.HashSet;
 import java.util.Set;
 
+import edu.ucsb.cs.smanner.protocol.Operation;
+
 public class Transaction {
 	public enum TransactionState {
-		NEW,
-		PREPARED,
-		COMMITTED,
-		ABORTED
+		NEW, PREPARED, COMMITTED, ABORTED
 	}
-	
+
 	final long id;
 	final String coordinator;
 	final Set<String> followers;
-	
+
 	TransactionState state;
 	Set<String> preparedFollowers = new HashSet<String>();
-	
+
+	Operation operation;
+
 	public Transaction(long id, String coordinator) {
 		this.id = id;
 		this.coordinator = coordinator;
@@ -45,12 +46,21 @@ public class Transaction {
 	}
 
 	public void prepare(String follower) {
-		if(state != TransactionState.NEW)
+		if (state != TransactionState.NEW)
 			throw new IllegalStateException("Transaction must be in state NEW");
-		
+
 		preparedFollowers.add(follower);
-		if(preparedFollowers.containsAll(followers)) {
+		if (preparedFollowers.containsAll(followers)) {
 			state = TransactionState.PREPARED;
 		}
 	}
+
+	public Operation getOperation() {
+		return operation;
+	}
+
+	public void setOperation(Operation operation) {
+		this.operation = operation;
+	}
+
 }

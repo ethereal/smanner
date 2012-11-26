@@ -10,11 +10,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.ucsb.cs.smanner.protocol.Operation;
 import edu.ucsb.cs.smanner.protocol.paxos.PaxosFollower;
 import edu.ucsb.cs.smanner.protocol.paxos.PaxosLeader;
-import edu.ucsb.cs.smanner.protocol.paxos.Proposal;
 import edu.ucsb.cs.smanner.protocol.paxos.ProposalListener;
-import edu.ucsb.cs.smanner.protocol.tpc.Transaction;
 import edu.ucsb.cs.smanner.protocol.tpc.Transaction.TransactionState;
 import edu.ucsb.cs.smanner.protocol.tpc.TransactionListener;
 import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitCoordinator;
@@ -77,13 +76,16 @@ public class SmallSpannerTest {
 		
 		pfA.addListener(new ProposalListener() {
 			@Override
-			public void notifyCommit(Proposal proposal) {
-				if(proposal.getId() % 10 == 0) {
+			public void notify(long id, Operation operation) {
+				log.debug("notified Paxos Group A");
+				if(operation instanceof PaxosPrepareOperation) {
 					// prepare
-					tpcFA.prepareTransaction(proposal.getId() / 10);
-				} else {
+					tpcFA.prepareTransaction(((PaxosPrepareOperation) operation).transactionId);
+				} else if(operation instanceof PaxosCommitOperation) {
 					// commit
-					tpcFA.commitTransaction(proposal.getId() / 10);
+					tpcFA.commitTransaction(((PaxosCommitOperation) operation).transactionId);
+				} else {
+					log.error("unknown operation {}", operation.getId());
 				}
 			}
 		});
@@ -96,15 +98,18 @@ public class SmallSpannerTest {
 		mB2 = new Moderator(nodeB2, new PaxosFollower());
 		mB3 = new Moderator(nodeB3, new PaxosFollower());
 		
-		pfA.addListener(new ProposalListener() {
+		pfB.addListener(new ProposalListener() {
 			@Override
-			public void notifyCommit(Proposal proposal) {
-				if(proposal.getId() % 10 == 0) {
+			public void notify(long id, Operation operation) {
+				log.debug("notified Paxos Group B");
+				if(operation instanceof PaxosPrepareOperation) {
 					// prepare
-					tpcFB.prepareTransaction(proposal.getId() / 10);
-				} else {
+					tpcFB.prepareTransaction(((PaxosPrepareOperation) operation).transactionId);
+				} else if(operation instanceof PaxosCommitOperation) {
 					// commit
-					tpcFB.commitTransaction(proposal.getId() / 10);
+					tpcFB.commitTransaction(((PaxosCommitOperation) operation).transactionId);
+				} else {
+					log.error("unknown operation {}", operation.getId());
 				}
 			}
 		});
@@ -119,20 +124,20 @@ public class SmallSpannerTest {
 		
 		tpcFA.addListener(new TransactionListener() {
 			@Override
-			public void notifyPrepare(Transaction transaction) {
-				plA.addProposal(transaction.getId() * 10);
+			public void notifyPrepare(long id, Operation operation) {
+				plA.addProposal(new PaxosPrepareOperation(operation.getId(), id));
 			}
-			public void notifyCommit(Transaction transaction) {
-				plA.addProposal(transaction.getId() * 10 + 1);
+			public void notifyCommit(long id, Operation operation) {
+				plA.addProposal(new PaxosCommitOperation(operation.getId(), id));
 			}
 		});
 		tpcFB.addListener(new TransactionListener() {
 			@Override
-			public void notifyPrepare(Transaction transaction) {
-				plB.addProposal(transaction.getId() * 10);
+			public void notifyPrepare(long id, Operation operation) {
+				plB.addProposal(new PaxosPrepareOperation(operation.getId(), id));
 			}
-			public void notifyCommit(Transaction transaction) {
-				plB.addProposal(transaction.getId() * 10 + 1);
+			public void notifyCommit(long id, Operation operation) {
+				plB.addProposal(new PaxosCommitOperation(operation.getId(), id));
 			}
 		});
 		
@@ -174,7 +179,7 @@ public class SmallSpannerTest {
 		mFollowB.cancel();
 	}
 
-	@Test
+	@Test(timeout = 1000)
 	public void testCommit() throws Exception {
 		log.trace("SmallSpannerTest::testCommit()");
 		
@@ -182,12 +187,40 @@ public class SmallSpannerTest {
 		followers.add(nodeFollowA);
 		followers.add(nodeFollowB);
 		
-		tpcCoord.addTransaction(new Transaction(0, nodeCoord, followers));
+		long id = tpcCoord.addTransaction(new NullOperation("one"));
 		
-		while(tpcCoord.getTransaction(0).getState() != TransactionState.COMMITTED ||
-			  tpcFA.getTransaction(0) == null || tpcFA.getTransaction(0).getState() != TransactionState.COMMITTED ||
-			  tpcFA.getTransaction(0) == null || tpcFB.getTransaction(0).getState() != TransactionState.COMMITTED) {
+		while(tpcCoord.getTransaction(id).getState() != TransactionState.COMMITTED ||
+			  tpcFA.getTransaction(id) == null || tpcFA.getTransaction(id).getState() != TransactionState.COMMITTED ||
+			  tpcFA.getTransaction(id) == null || tpcFB.getTransaction(id).getState() != TransactionState.COMMITTED) {
 			Thread.sleep(100);
+		}
+	}
+	
+	@SuppressWarnings("serial")
+	static class PaxosCommitOperation extends Operation {
+		final long transactionId;
+		
+		public PaxosCommitOperation(String id, long transactionId) {
+			super(id);
+			this.transactionId = transactionId;
+		}
+
+		public long getTransactionId() {
+			return transactionId;
+		}
+	}
+
+	@SuppressWarnings("serial")
+	static class PaxosPrepareOperation extends Operation {
+		final long transactionId;
+
+		public PaxosPrepareOperation(String id, long transactionId) {
+			super(id);
+			this.transactionId = transactionId;
+		}
+
+		public long getTransactionId() {
+			return transactionId;
 		}
 	}
 
