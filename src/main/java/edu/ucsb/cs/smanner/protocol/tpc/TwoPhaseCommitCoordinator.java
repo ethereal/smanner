@@ -28,8 +28,8 @@ public class TwoPhaseCommitCoordinator extends AbstractProtocol {
 	@Override
 	public void put(Message message) throws Exception {
 		log.trace("TwoPhaseCommitCoordinator::put({})", message);
-		if(message instanceof IsPreparedMessage) {
-			IsPreparedMessage msg = (IsPreparedMessage)message;
+		if(message instanceof PreparedMessage) {
+			PreparedMessage msg = (PreparedMessage)message;
 			Transaction t = transactions.get(msg.id);
 
 			log.debug("received prepare for transaction {} from {}", t.id, msg.getSource());
@@ -40,8 +40,19 @@ public class TwoPhaseCommitCoordinator extends AbstractProtocol {
 				
 				t.setState(TransactionState.COMMITTED);
 				for(String follower : t.followers) {
-					outQueue.add(new CommitMessage(self, follower, msg.id));
+					outQueue.add(new DoCommitMessage(self, follower, msg.id));
 				}
+			}
+		} else if(message instanceof AbortedMessage) {
+			AbortedMessage msg = (AbortedMessage)message;
+			Transaction t = transactions.get(msg.id);
+
+			log.debug("received abort for transaction {} from {}", t.id, msg.getSource());
+
+			log.debug("transaction {} aborted", t.id);
+			t.setState(TransactionState.ABORTED);
+			for(String follower : t.followers) {
+				outQueue.add(new DoAbortMessage(self, follower, msg.id));
 			}
 		} else {
 			throw new Exception(String.format("unexpected message type %s", message.getClass()));
@@ -81,7 +92,7 @@ public class TwoPhaseCommitCoordinator extends AbstractProtocol {
 		transactions.put((long)id, new Transaction(id, self, followers));
 		
 		for(String follower : followers) {
-			outQueue.add(new PrepareMessage(self, follower, id, operation));
+			outQueue.add(new DoPrepareMessage(self, follower, id, operation));
 		}
 		
 		return id;

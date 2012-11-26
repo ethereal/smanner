@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import edu.ucsb.cs.smanner.protocol.Operation;
 import edu.ucsb.cs.smanner.protocol.tpc.Transaction.TransactionState;
-import edu.ucsb.cs.smanner.protocol.tpc.TransactionListener;
 import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitCoordinator;
 import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitParticipant;
 
@@ -24,7 +23,7 @@ public class TwoPhaseCommitTest {
 	Moderator senderA;
 	Moderator receiverB;
 	Moderator receiverC;
-	
+
 	TwoPhaseCommitCoordinator coordA;
 	TwoPhaseCommitParticipant followB;
 	TwoPhaseCommitParticipant followC;
@@ -34,28 +33,9 @@ public class TwoPhaseCommitTest {
 		coordA = new TwoPhaseCommitCoordinator();
 		followB = new TwoPhaseCommitParticipant();
 		followC = new TwoPhaseCommitParticipant();
-		
-		followB.addListener(new TransactionListener() {
-			@Override
-			public void notifyPrepare(long id, Operation operation) {
-				followB.prepareTransaction(id);
-			}
-			@Override
-			public void notifyCommit(long id, Operation operation) {
-				followB.commitTransaction(id);
-			}
-		});
 
-		followC.addListener(new TransactionListener() {
-			@Override
-			public void notifyPrepare(long id, Operation operation) {
-				followC.prepareTransaction(id);
-			}
-			@Override
-			public void notifyCommit(long id, Operation operation) {
-				followC.commitTransaction(id);
-			}
-		});
+		followB.setExecutor(new NullTransactionExecutor());
+		followC.setExecutor(new NullTransactionExecutor());
 
 		senderA = new Moderator(nodeA, coordA);
 		receiverB = new Moderator(nodeB, followB);
@@ -68,7 +48,7 @@ public class TwoPhaseCommitTest {
 	public void tearDown() throws Exception {
 		senderA.cancel();
 		receiverB.cancel();
-		receiverC.cancel();	
+		receiverC.cancel();
 	}
 
 	@Test(timeout = 1000)
@@ -79,11 +59,37 @@ public class TwoPhaseCommitTest {
 		receiverC.run();
 
 		long id = coordA.addTransaction(new NullOperation("one"));
-		
-		while(coordA.getTransaction(id).getState() != TransactionState.COMMITTED ||
-			  followB.getTransaction(id).getState() != TransactionState.COMMITTED ||
-			  followC.getTransaction(id).getState() != TransactionState.COMMITTED) {
+
+		while (coordA.getTransaction(id).getState() != TransactionState.COMMITTED ||
+			   followB.getTransaction(id).getState() != TransactionState.COMMITTED ||
+			   followC.getTransaction(id).getState() != TransactionState.COMMITTED) {
 			Thread.sleep(100);
+		}
+	}
+
+	@Test(timeout = 1000)
+	public void testAbort() throws Exception {
+		log.trace("TwoPhaseCommitTest::testAbort()");
+		
+		followC.setExecutor(new FaultyTransactionExecutor());
+		
+		senderA.run();
+		receiverB.run();
+		receiverC.run();
+
+		long id = coordA.addTransaction(new NullOperation("one"));
+
+		while (coordA.getTransaction(id).getState() != TransactionState.ABORTED ||
+			   followB.getTransaction(id).getState() != TransactionState.ABORTED ||
+			   followC.getTransaction(id).getState() != TransactionState.ABORTED) {
+			Thread.sleep(100);
+		}
+	}
+
+	static class FaultyTransactionExecutor extends NullTransactionExecutor {
+		@Override
+		public void prepare(long id, Operation operation) {
+			participant.declinePrepare(id);
 		}
 	}
 }

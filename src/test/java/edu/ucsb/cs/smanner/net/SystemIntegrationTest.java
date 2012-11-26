@@ -15,7 +15,7 @@ import edu.ucsb.cs.smanner.protocol.paxos.PaxosFollower;
 import edu.ucsb.cs.smanner.protocol.paxos.PaxosLeader;
 import edu.ucsb.cs.smanner.protocol.paxos.ProposalListener;
 import edu.ucsb.cs.smanner.protocol.tpc.Transaction.TransactionState;
-import edu.ucsb.cs.smanner.protocol.tpc.TransactionListener;
+import edu.ucsb.cs.smanner.protocol.tpc.TransactionExecutor;
 import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitCoordinator;
 import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitParticipant;
 
@@ -57,7 +57,7 @@ public class SystemIntegrationTest {
 				log.debug("notified Paxos Group B");
 				if(operation instanceof PaxosPrepareOperation) {
 					// prepare
-					participantA.prepareTransaction(((PaxosPrepareOperation) operation).transactionId);
+					participantA.acceptPrepare(((PaxosPrepareOperation) operation).transactionId);
 				} else if(operation instanceof PaxosCommitOperation) {
 					// commit
 					participantA.commitTransaction(((PaxosCommitOperation) operation).transactionId);
@@ -76,7 +76,7 @@ public class SystemIntegrationTest {
 				log.debug("notified Paxos Group B");
 				if(operation instanceof PaxosPrepareOperation) {
 					// prepare
-					participantB.prepareTransaction(((PaxosPrepareOperation) operation).transactionId);
+					participantB.acceptPrepare(((PaxosPrepareOperation) operation).transactionId);
 				} else if(operation instanceof PaxosCommitOperation) {
 					// commit
 					participantB.commitTransaction(((PaxosCommitOperation) operation).transactionId);
@@ -90,24 +90,32 @@ public class SystemIntegrationTest {
 		coordinator = (TwoPhaseCommitCoordinator) context2.getBean("protocolTpcL");
 		
 		participantA = (TwoPhaseCommitParticipant) context1.getBean("protocolTpcA");
-		participantA.addListener(new TransactionListener() {
+		participantA.setExecutor(new TransactionExecutor() {
 			@Override
-			public void notifyPrepare(long id, Operation operation) {
+			public void prepare(long id, Operation operation) {
 				leaderA.addProposal(new PaxosPrepareOperation(operation.getId(), id));
 			}
-			public void notifyCommit(long id, Operation operation) {
+			public void commit(long id, Operation operation) {
 				leaderA.addProposal(new PaxosCommitOperation(operation.getId(), id));
+			}
+			@Override
+			public void abort(long id, Operation operation) {
+				// left blank	
 			}
 		});
 		
 		participantB = (TwoPhaseCommitParticipant) context2.getBean("protocolTpcB");
-		participantB.addListener(new TransactionListener() {
+		participantB.setExecutor(new TransactionExecutor() {
 			@Override
-			public void notifyPrepare(long id, Operation operation) {
+			public void prepare(long id, Operation operation) {
 				leaderB.addProposal(new PaxosPrepareOperation(operation.getId(), id));
 			}
-			public void notifyCommit(long id, Operation operation) {
+			public void commit(long id, Operation operation) {
 				leaderB.addProposal(new PaxosCommitOperation(operation.getId(), id));
+			}
+			@Override
+			public void abort(long id, Operation operation) {
+				// left blank	
 			}
 		});
 		

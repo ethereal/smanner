@@ -15,7 +15,7 @@ import edu.ucsb.cs.smanner.protocol.paxos.PaxosFollower;
 import edu.ucsb.cs.smanner.protocol.paxos.PaxosLeader;
 import edu.ucsb.cs.smanner.protocol.paxos.ProposalListener;
 import edu.ucsb.cs.smanner.protocol.tpc.Transaction.TransactionState;
-import edu.ucsb.cs.smanner.protocol.tpc.TransactionListener;
+import edu.ucsb.cs.smanner.protocol.tpc.TransactionExecutor;
 import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitCoordinator;
 import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitParticipant;
 
@@ -80,7 +80,7 @@ public class SmallSpannerTest {
 				log.debug("notified Paxos Group A");
 				if(operation instanceof PaxosPrepareOperation) {
 					// prepare
-					tpcFA.prepareTransaction(((PaxosPrepareOperation) operation).transactionId);
+					tpcFA.acceptPrepare(((PaxosPrepareOperation) operation).transactionId);
 				} else if(operation instanceof PaxosCommitOperation) {
 					// commit
 					tpcFA.commitTransaction(((PaxosCommitOperation) operation).transactionId);
@@ -104,7 +104,7 @@ public class SmallSpannerTest {
 				log.debug("notified Paxos Group B");
 				if(operation instanceof PaxosPrepareOperation) {
 					// prepare
-					tpcFB.prepareTransaction(((PaxosPrepareOperation) operation).transactionId);
+					tpcFB.acceptPrepare(((PaxosPrepareOperation) operation).transactionId);
 				} else if(operation instanceof PaxosCommitOperation) {
 					// commit
 					tpcFB.commitTransaction(((PaxosCommitOperation) operation).transactionId);
@@ -122,22 +122,30 @@ public class SmallSpannerTest {
 		mFollowA = new Moderator(nodeFollowA, tpcFA);
 		mFollowB = new Moderator(nodeFollowB, tpcFB);
 		
-		tpcFA.addListener(new TransactionListener() {
+		tpcFA.setExecutor(new TransactionExecutor() {
 			@Override
-			public void notifyPrepare(long id, Operation operation) {
+			public void prepare(long id, Operation operation) {
 				plA.addProposal(new PaxosPrepareOperation(operation.getId(), id));
 			}
-			public void notifyCommit(long id, Operation operation) {
+			public void commit(long id, Operation operation) {
 				plA.addProposal(new PaxosCommitOperation(operation.getId(), id));
 			}
-		});
-		tpcFB.addListener(new TransactionListener() {
 			@Override
-			public void notifyPrepare(long id, Operation operation) {
+			public void abort(long id, Operation operation) {
+				// left blank	
+			}
+		});
+		tpcFB.setExecutor(new TransactionExecutor() {
+			@Override
+			public void prepare(long id, Operation operation) {
 				plB.addProposal(new PaxosPrepareOperation(operation.getId(), id));
 			}
-			public void notifyCommit(long id, Operation operation) {
+			public void commit(long id, Operation operation) {
 				plB.addProposal(new PaxosCommitOperation(operation.getId(), id));
+			}
+			@Override
+			public void abort(long id, Operation operation) {
+				// left blank	
 			}
 		});
 		

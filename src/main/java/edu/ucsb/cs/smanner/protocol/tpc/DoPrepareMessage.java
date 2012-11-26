@@ -3,7 +3,7 @@ package edu.ucsb.cs.smanner.protocol.tpc;
 import edu.ucsb.cs.smanner.protocol.Operation;
 
 
-public class PrepareMessage extends TpcMessage {
+public class DoPrepareMessage extends TpcMessage {
 	/**
 	 * 
 	 */
@@ -11,7 +11,7 @@ public class PrepareMessage extends TpcMessage {
 
 	final Operation operation;
 	
-	public PrepareMessage(String source, String destination, long id, Operation operation) {
+	public DoPrepareMessage(String source, String destination, long id, Operation operation) {
 		super(source, destination, id);
 		this.operation = operation;
 	}
