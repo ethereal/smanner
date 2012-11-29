@@ -1,5 +1,6 @@
 package edu.ucsb.cs.smanner.net;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -8,7 +9,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,8 +26,7 @@ public class Moderator implements MessageEndpoint {
 	Map<String, MessageEndpoint> endpoints = new HashMap<String, MessageEndpoint>();
 
 	BlockingQueue<Message> inQueue;
-	InputThread inputThread;
-	OutputThread outputThread;
+	ModeratorThread moderatorThread;
 
 	ExecutorService executor;
 
@@ -45,11 +44,8 @@ public class Moderator implements MessageEndpoint {
 
 	void cancel() {
 		log.trace("Moderator::cancel()");
-		if(inputThread != null)
-			inputThread.cancel();
-		
-		if(outputThread != null)
-			outputThread.cancel();
+		if(moderatorThread != null)
+			moderatorThread.cancel();
 		
 		if(executor != null)
 			executor.shutdown();
@@ -62,8 +58,7 @@ public class Moderator implements MessageEndpoint {
 		inQueue = new LinkedBlockingQueue<Message>();
 
 		log.trace("Moderator::createThreads");
-		inputThread = new InputThread();
-		outputThread = new OutputThread();
+		moderatorThread = new ModeratorThread();
 
 		log.trace("Moderator::createThreads");
 		protocol.setTime(0);
@@ -72,8 +67,7 @@ public class Moderator implements MessageEndpoint {
 
 		log.trace("Moderator::createThreads");
 		executor = Executors.newFixedThreadPool(2);
-		executor.execute(inputThread);
-		executor.execute(outputThread);
+		executor.execute(moderatorThread);
 	}
 
 	boolean isDone() {
@@ -81,35 +75,7 @@ public class Moderator implements MessageEndpoint {
 		return protocol.isDone();
 	}
 
-	class InputThread implements Runnable {
-		volatile boolean active = true;
-
-		@Override
-		public void run() {
-			log.trace("InputThread::run()");
-			try {
-				while (active) {
-					Message message = inQueue.poll(POLL_INTERVAL,
-							TimeUnit.MILLISECONDS);
-					if (message != null) {
-						log.debug("Receiving {}", message);
-						synchronized (protocol) {
-							protocol.put(message);
-						}
-					}
-				}
-			} catch (Exception e) {
-				log.error("InputThread {} encountered exception: {}", self, e);
-			}
-		}
-
-		public void cancel() {
-			log.trace("InputThread::cancel()");
-			active = false;
-		}
-	}
-
-	class OutputThread implements Runnable {
+	class ModeratorThread implements Runnable {
 		volatile boolean active = true;
 
 		@Override
@@ -120,20 +86,27 @@ public class Moderator implements MessageEndpoint {
 				long currentTime = 0;
 
 				while (active) {
-					synchronized (protocol) {
-						protocol.setTime(currentTime);
+					protocol.setTime(currentTime);
+					
+					Collection<Message> messages = new ArrayList<Message>();
+					inQueue.drainTo(messages);
+					
+					for(Message message : messages) {
+						log.debug("receiving {}", message);
+						protocol.put(message);
+					}
+					
+					while (protocol.hasMessage()) {
+						Message message = protocol.get();
+						log.debug("sending {}", message);
 						
-						while (protocol.hasMessage()) {
-							Message message = protocol.get();
-							log.debug("sending {}", message);
-							MessageEndpoint remote = endpoints.get(message
-									.getDestination());
-							
-							if(remote == null)
-								throw new Exception(String.format("Endpoint %s not known.", message.getDestination()));
+						MessageEndpoint remote = endpoints.get(message
+								.getDestination());
+						
+						if(remote == null)
+							throw new Exception(String.format("Endpoint %s not known.", message.getDestination()));
 
-							remote.put(message);
-						}
+						remote.put(message);
 					}
 
 					Thread.sleep(POLL_INTERVAL);
