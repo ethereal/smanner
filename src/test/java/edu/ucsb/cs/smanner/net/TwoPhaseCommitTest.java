@@ -1,5 +1,7 @@
 package edu.ucsb.cs.smanner.net;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Arrays;
 
 import org.junit.After;
@@ -9,11 +11,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.ucsb.cs.smanner.protocol.Operation;
+import edu.ucsb.cs.smanner.protocol.tpc.Transaction;
 import edu.ucsb.cs.smanner.protocol.tpc.Transaction.TransactionState;
 import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitCoordinator;
 import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitParticipant;
 
 public class TwoPhaseCommitTest {
+	public static final String RESULT_STRING = "Hello World!";
+
 	private static Logger log = LoggerFactory.getLogger(TwoPhaseCommitTest.class);
 
 	final String nodeA = "A";
@@ -86,10 +91,51 @@ public class TwoPhaseCommitTest {
 		}
 	}
 
+	@Test(timeout = 1000)
+	public void testOperationResult() throws Exception {
+		log.trace("TwoPhaseCommitTest::testOperationResult()");
+		
+		followB.setExecutor(new TalkativeTransactionExecutor("B result"));
+		followC.setExecutor(new TalkativeTransactionExecutor("C result"));
+		
+		senderA.run();
+		receiverB.run();
+		receiverC.run();
+
+		long id = coordA.addTransaction(new NullOperation("one"));
+
+		Transaction t = coordA.getTransaction(id);
+		while (t.getState() != TransactionState.COMMITTED) {
+			Thread.sleep(100);
+		}
+		
+		assertEquals("B result", ((StringOperationResult)t.getResult(nodeB)).getString());
+		assertEquals("C result", ((StringOperationResult)t.getResult(nodeC)).getString());
+	}
+
 	static class FaultyTransactionExecutor extends NullTransactionExecutor {
 		@Override
 		public void prepare(long id, Operation operation) {
 			participant.declinePrepare(id);
+		}
+	}
+
+	static class TalkativeTransactionExecutor extends NullTransactionExecutor {
+		final String string;
+		
+		public TalkativeTransactionExecutor(String string) {
+			super();
+			this.string = string;
+		}
+		
+		@Override
+		public void prepare(long id, Operation operation) {
+			participant.acceptPrepare(id);
+		}
+		
+		@Override
+		public void commit(long id, Operation operation) {
+			participant.commitTransaction(id, new StringOperationResult(operation, string));
 		}
 	}
 }

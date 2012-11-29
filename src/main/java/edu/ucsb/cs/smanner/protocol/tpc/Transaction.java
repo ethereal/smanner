@@ -100,8 +100,12 @@ public class Transaction {
 		operations.put(node, operation);
 	}
 
-	public Operation getOperation(String self) {
-		return operations.get(self);
+	public Operation getOperation(String node) {
+		return operations.get(node);
+	}
+
+	public Object getResult(String node) {
+		return results.get(node);
 	}
 
 }
