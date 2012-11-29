@@ -46,9 +46,10 @@ public class ModeratorMultiNodeTest {
 	@Test(timeout = 1000)
 	public void testIsDoneActive() throws Exception {
 		log.trace("ModeratorTest::testIsDoneActive()");
-		senderA.run();
 		receiverB.run();
 		receiverC.run();
+		senderA.run();
+		
 		Thread.sleep(100);
 		assertFalse(senderA.isDone());
 		assertFalse(receiverB.isDone());
@@ -58,9 +59,9 @@ public class ModeratorMultiNodeTest {
 	@Test(timeout = 2000)
 	public void testIsDoneComplete() throws Exception {
 		log.trace("ModeratorTest::testIsDoneTerminated()");
-		senderA.run();
 		receiverB.run();
 		receiverC.run();
+		senderA.run();
 		
 		while (!senderA.isDone() || !receiverB.isDone() || !receiverC.isDone()) {
 			Thread.sleep(100);
