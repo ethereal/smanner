@@ -12,6 +12,7 @@
 	<bean id="serverAL" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
 		<constructor-arg name="self" value="pgAL" />
 		<constructor-arg name="protocol" ref="protocolAL" />
+		<property name="groupName" value="pgA"/>
 	</bean>
 
 	<bean id="exporterAL" class="org.springframework.remoting.rmi.RmiServiceExporter">
@@ -25,6 +26,7 @@
 	<bean id="serverA1" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
 		<constructor-arg name="self" value="pgA1" />
 		<constructor-arg name="protocol" ref="protocolA1" />
+		<property name="groupName" value="pgA"/>
 	</bean>
 
 	<bean id="exporterA1" class="org.springframework.remoting.rmi.RmiServiceExporter">
@@ -38,6 +40,7 @@
 	<bean id="serverB1" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
 		<constructor-arg name="self" value="pgB1" />
 		<constructor-arg name="protocol" ref="protocolA1" />
+		<property name="groupName" value="pgB"/>
 	</bean>
 
 	<bean id="exporterB1" class="org.springframework.remoting.rmi.RmiServiceExporter">
@@ -51,6 +54,7 @@
 	<bean id="serverTpcA" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
 		<constructor-arg name="self" value="tpcA" />
 		<constructor-arg name="protocol" ref="protocolTpcA" />
+		<property name="groupName" value="tpc"/>
 	</bean>
 
 	<bean id="exporterTpcA" class="org.springframework.remoting.rmi.RmiServiceExporter">

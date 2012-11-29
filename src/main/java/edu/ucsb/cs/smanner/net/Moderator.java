@@ -29,6 +29,9 @@ public class Moderator implements MessageEndpoint {
 	ModeratorThread moderatorThread;
 
 	ExecutorService executor;
+	
+	/** associative group name for XML config */
+	String groupName;
 
 	public Moderator(String self, Protocol protocol) {
 		log.trace("Moderator::Moderator({}, {})", self, protocol);
@@ -42,7 +45,7 @@ public class Moderator implements MessageEndpoint {
 		endpoints.put(endpoint.getIdentifier(), endpoint);
 	}
 
-	void cancel() {
+	public void cancel() {
 		log.trace("Moderator::cancel()");
 		if(moderatorThread != null)
 			moderatorThread.cancel();
@@ -51,7 +54,7 @@ public class Moderator implements MessageEndpoint {
 			executor.shutdown();
 	}
 
-	void run() {
+	public void run() {
 		log.trace("Moderator::run()");
 		
 		log.trace("Moderator::createQueues");
@@ -140,6 +143,14 @@ public class Moderator implements MessageEndpoint {
 			log.debug("adding at {} endpoint {}", self, identifier);
 			this.endpoints.put(identifier, endpoint);
 		}
+	}
+
+	public String getGroupName() {
+		return groupName;
+	}
+
+	public void setGroupName(String groupName) {
+		this.groupName = groupName;
 	}
 
 }
