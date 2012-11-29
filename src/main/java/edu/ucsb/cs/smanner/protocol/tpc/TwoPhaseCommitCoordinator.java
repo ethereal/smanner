@@ -38,11 +38,11 @@ public class TwoPhaseCommitCoordinator extends AbstractProtocol {
 			if(t.getState() == TransactionState.PREPARED) {
 				log.debug("transaction {} prepared", t.id);
 				
-				t.setState(TransactionState.COMMITTED);
 				for(String follower : t.followers) {
 					outQueue.add(new DoCommitMessage(self, follower, msg.id));
 				}
 			}
+			
 		} else if(message instanceof AbortedMessage) {
 			AbortedMessage msg = (AbortedMessage)message;
 			Transaction t = transactions.get(msg.id);
@@ -50,10 +50,20 @@ public class TwoPhaseCommitCoordinator extends AbstractProtocol {
 			log.debug("received abort for transaction {} from {}", t.id, msg.getSource());
 
 			log.debug("transaction {} aborted", t.id);
-			t.setState(TransactionState.ABORTED);
+			t.abort();
 			for(String follower : t.followers) {
 				outQueue.add(new DoAbortMessage(self, follower, msg.id));
 			}
+			
+		} else if(message instanceof CommittedMessage) {
+			CommittedMessage msg = (CommittedMessage)message;
+			Transaction t = transactions.get(msg.id);
+
+			log.debug("received commit confirmation for transaction {} from {}", t.id, msg.getSource());
+
+			log.debug("transaction {} committed, result {}", t.id, msg.result);
+			t.commit(msg.getSource(), msg.result);
+			
 		} else {
 			throw new Exception(String.format("unexpected message type %s", message.getClass()));
 		}
@@ -81,6 +91,14 @@ public class TwoPhaseCommitCoordinator extends AbstractProtocol {
 	}
 	
 	public int addTransaction(Operation operation) {
+		Map<String, Operation> operations = new HashMap<String, Operation>();
+		for(String node : nodes) {
+			operations.put(node, operation);
+		}
+		return addTransaction(operations);
+	}
+
+	public int addTransaction(Map<String, Operation> operations) {
 		int id = nextId;
 		nextId++;
 		
@@ -92,7 +110,7 @@ public class TwoPhaseCommitCoordinator extends AbstractProtocol {
 		transactions.put((long)id, new Transaction(id, self, followers));
 		
 		for(String follower : followers) {
-			outQueue.add(new DoPrepareMessage(self, follower, id, operation));
+			outQueue.add(new DoPrepareMessage(self, follower, id, operations.get(follower)));
 		}
 		
 		return id;

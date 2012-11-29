@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import edu.ucsb.cs.smanner.protocol.AbstractProtocol;
 import edu.ucsb.cs.smanner.protocol.Message;
 import edu.ucsb.cs.smanner.protocol.Operation;
+import edu.ucsb.cs.smanner.protocol.OperationResult;
 import edu.ucsb.cs.smanner.protocol.tpc.Transaction.TransactionState;
 
 public class TwoPhaseCommitParticipant extends AbstractProtocol {
@@ -34,11 +35,11 @@ public class TwoPhaseCommitParticipant extends AbstractProtocol {
 				throw new Exception("Transaction ID already exists");
 
 			Transaction t = new Transaction(msg.id, msg.getSource());
-			t.setOperation(msg.operation);
+			t.setOperation(self, msg.operation);
 
 			log.debug("{}: Try preparing transaction {}", self, t.id);
 			transactions.put(msg.id, t);
-			executePrepare(t.id, t.operation);
+			executePrepare(t.id, msg.operation);
 
 		} else if (message instanceof DoCommitMessage) {
 			DoCommitMessage msg = (DoCommitMessage) message;
@@ -49,7 +50,8 @@ public class TwoPhaseCommitParticipant extends AbstractProtocol {
 			Transaction t = transactions.get(msg.id);
 
 			log.debug("{}: Try committing transaction {}", self, t.id);
-			executeCommit(t.id, t.operation);
+			executeCommit(t.id, t.getOperation(self));
+			
 		} else if (message instanceof DoAbortMessage) {
 			DoAbortMessage msg = (DoAbortMessage) message;
 
@@ -59,7 +61,8 @@ public class TwoPhaseCommitParticipant extends AbstractProtocol {
 			Transaction t = transactions.get(msg.id);
 
 			log.debug("{}: Try aborting transaction {}", self, t.id);
-			executeAbort(t.id, t.operation);
+			executeAbort(t.id, t.getOperation(self));
+			
 		} else {
 			throw new Exception(String.format("unexpected message type %s", message.getClass()));
 		}
@@ -105,9 +108,14 @@ public class TwoPhaseCommitParticipant extends AbstractProtocol {
 	}
 
 	public void commitTransaction(long id) {
-		log.debug("{}: Committed transaction {}", self, id);
+		commitTransaction(id, null);
+	}
+
+	public void commitTransaction(long id, OperationResult result) {
+		log.debug("{}: Committed transaction {} with result {}", new Object[] { self, id, result });
 		Transaction t = transactions.get(id);
 		t.setState(TransactionState.COMMITTED);
+		outQueue.add(new CommittedMessage(self, t.coordinator, id, result));
 	}
 
 	public void abortTransaction(long id) {

@@ -1,9 +1,12 @@
 package edu.ucsb.cs.smanner.protocol.tpc;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import edu.ucsb.cs.smanner.protocol.Operation;
+import edu.ucsb.cs.smanner.protocol.OperationResult;
 
 public class Transaction {
 	public enum TransactionState {
@@ -16,8 +19,10 @@ public class Transaction {
 
 	TransactionState state;
 	Set<String> preparedFollowers = new HashSet<String>();
+	Set<String> committedFollowers = new HashSet<String>();
 
-	Operation operation;
+	Map<String, Operation> operations = new HashMap<String, Operation>();
+	Map<String, OperationResult> results = new HashMap<String, OperationResult>();
 
 	public Transaction(long id, String coordinator) {
 		this.id = id;
@@ -55,12 +60,48 @@ public class Transaction {
 		}
 	}
 
-	public Operation getOperation() {
-		return operation;
+	public void commit(String follower, OperationResult result) {
+		if (state != TransactionState.PREPARED)
+			throw new IllegalStateException("Transaction must be in state PREPARED");
+
+		committedFollowers.add(follower);
+		results.put(follower, result);
+		
+		if (committedFollowers.containsAll(followers)) {
+			state = TransactionState.COMMITTED;
+		}
+	}
+	
+	public void abort() {
+		state = TransactionState.ABORTED;
 	}
 
-	public void setOperation(Operation operation) {
-		this.operation = operation;
+	public Map<String, Operation> getOperations() {
+		return operations;
+	}
+
+	public void setOperations(Map<String, Operation> operations) {
+		this.operations = operations;
+	}
+	
+	public Map<String, OperationResult> getResults() {
+		return results;
+	}
+
+	public void setResults(Map<String, OperationResult> results) {
+		this.results = results;
+	}
+
+	public void setResult(String node, OperationResult result) {
+		results.put(node, result);
+	}
+
+	public void setOperation(String node, Operation operation) {
+		operations.put(node, operation);
+	}
+
+	public Operation getOperation(String self) {
+		return operations.get(self);
 	}
 
 }
