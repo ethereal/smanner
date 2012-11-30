@@ -35,7 +35,7 @@ public class TwoPhaseCommitCoordinator extends AbstractProtocol {
 			log.debug("received prepare for transaction {} from {}", t.id, msg.getSource());
 			t.prepare(msg.getSource());
 			
-			if(t.getState() == TransactionState.PREPARED) {
+			if(t.state == TransactionState.PREPARED) {
 				log.debug("transaction {} prepared", t.id);
 				
 				for(String follower : t.followers) {
@@ -51,9 +51,13 @@ public class TwoPhaseCommitCoordinator extends AbstractProtocol {
 
 			log.debug("transaction {} aborted", t.id);
 			t.abort();
+			
 			for(String follower : t.followers) {
 				outQueue.add(new DoAbortMessage(self, follower, msg.id));
 			}
+			
+			if(t.client != null)
+				outQueue.add(new ClientResponseMessage(self, t.client, t.id, false));
 			
 		} else if(message instanceof CommittedMessage) {
 			CommittedMessage msg = (CommittedMessage)message;
@@ -63,6 +67,17 @@ public class TwoPhaseCommitCoordinator extends AbstractProtocol {
 
 			log.debug("transaction {} committed, result {}", t.id, msg.result);
 			t.commit(msg.getSource(), msg.result);
+			
+			if(t.state == TransactionState.COMMITTED) {
+				if(t.client != null)
+					outQueue.add(new ClientResponseMessage(self, t.client, t.id, t.results));
+			}
+			
+		} else if(message instanceof ClientRequestMessage) {
+			ClientRequestMessage msg = (ClientRequestMessage)message;
+			log.debug("received client request from {}", msg.getSource());
+			
+			addTransaction(msg.operations, msg.getSource());
 			
 		} else {
 			throw new Exception(String.format("unexpected message type %s", message.getClass()));
@@ -99,6 +114,10 @@ public class TwoPhaseCommitCoordinator extends AbstractProtocol {
 	}
 
 	public int addTransaction(Map<String, Operation> operations) {
+		return addTransaction(operations, null);
+	}
+
+	public int addTransaction(Map<String, Operation> operations, String client) {
 		int id = nextId;
 		nextId++;
 		
@@ -107,7 +126,7 @@ public class TwoPhaseCommitCoordinator extends AbstractProtocol {
 		followers.remove(self);
 		
 		log.debug("add transaction {}", id);
-		transactions.put((long)id, new Transaction(id, self, followers));
+		transactions.put((long)id, new Transaction(id, self, followers, client));
 		
 		for(String follower : followers) {
 			outQueue.add(new DoPrepareMessage(self, follower, id, operations.get(follower)));

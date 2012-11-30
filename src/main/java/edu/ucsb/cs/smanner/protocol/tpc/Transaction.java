@@ -16,6 +16,7 @@ public class Transaction {
 	final long id;
 	final String coordinator;
 	final Set<String> followers;
+	final String client;
 
 	TransactionState state;
 	Set<String> preparedFollowers = new HashSet<String>();
@@ -28,13 +29,15 @@ public class Transaction {
 		this.id = id;
 		this.coordinator = coordinator;
 		this.followers = null;
+		this.client = null;
 		this.state = TransactionState.NEW;
 	}
 
-	public Transaction(long id, String coordinator, Set<String> followers) {
+	public Transaction(long id, String coordinator, Set<String> followers, String client) {
 		this.id = id;
 		this.coordinator = coordinator;
 		this.followers = followers;
+		this.client = client;
 		this.state = TransactionState.NEW;
 	}
 
