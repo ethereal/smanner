@@ -59,9 +59,6 @@ public class TwoPhaseCommitCoordinator extends AbstractProtocol implements Trans
 				outQueue.add(new DoAbortMessage(self, follower, msg.id));
 			}
 			
-			if(t.client != null)
-				outQueue.add(new ClientResponseMessage(self, t.client, t.id, false));
-			
 		} else if(message instanceof CommittedMessage) {
 			CommittedMessage msg = (CommittedMessage)message;
 			Transaction t = transactions.get(msg.id);
@@ -70,17 +67,6 @@ public class TwoPhaseCommitCoordinator extends AbstractProtocol implements Trans
 
 			log.debug("transaction {} committed, result {}", t.id, msg.result);
 			t.commit(msg.getSource(), msg.result);
-			
-			if(t.state == TransactionState.COMMITTED) {
-				if(t.client != null)
-					outQueue.add(new ClientResponseMessage(self, t.client, t.id, t.results));
-			}
-			
-		} else if(message instanceof ClientRequestMessage) {
-			ClientRequestMessage msg = (ClientRequestMessage)message;
-			log.debug("received client request from {}", msg.getSource());
-			
-			addTransaction(msg.operations, msg.getSource());
 			
 		} else {
 			throw new Exception(String.format("unexpected message type %s", message.getClass()));

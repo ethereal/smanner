@@ -39,7 +39,7 @@
 
 	<bean id="serverB1" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
 		<constructor-arg name="self" value="pgB1" />
-		<constructor-arg name="protocol" ref="protocolA1" />
+		<constructor-arg name="protocol" ref="protocolB1" />
 		<property name="groupName" value="pgB"/>
 	</bean>
 

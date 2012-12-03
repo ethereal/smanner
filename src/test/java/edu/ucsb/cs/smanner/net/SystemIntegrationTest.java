@@ -1,6 +1,8 @@
 package edu.ucsb.cs.smanner.net;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
@@ -25,6 +27,8 @@ public class SystemIntegrationTest {
 	AbstractApplicationContext context2;
 	AbstractApplicationContext context3;
 	AbstractApplicationContext contextConfig;
+	AbstractApplicationContext contextClient1;
+	AbstractApplicationContext contextClient2;
 
 	PaxosLeader leaderA;
 	PaxosFollower followerA;
@@ -36,6 +40,9 @@ public class SystemIntegrationTest {
 	TwoPhaseCommitParticipant participantA;
 	TwoPhaseCommitParticipant participantB;
 	
+	TransactionEndpoint client1;
+	TransactionEndpoint client2;
+	
 	volatile boolean committed = false;
 
 	@Before
@@ -46,6 +53,8 @@ public class SystemIntegrationTest {
 		context2 = TestUtil.createContext("/META-INF/spring/node2.xml");
 		context3 = TestUtil.createContext("/META-INF/spring/node3.xml");
 		contextConfig = TestUtil.createContext("/META-INF/spring/config.xml");
+		contextClient1 = TestUtil.createContext("/META-INF/spring/client.xml");
+		contextClient2 = TestUtil.createContext("/META-INF/spring/client.xml");
 		
 		// Paxos Group A
 		leaderA = (PaxosLeader) context1.getBean("protocolAL");
@@ -126,6 +135,7 @@ public class SystemIntegrationTest {
 			}
 		});
 		
+		// set up servers
 		setupModerator(context1, "serverAL", "pgA");
 		setupModerator(context1, "serverA1", "pgA");
 		setupModerator(context1, "serverB1", "pgB");
@@ -139,6 +149,10 @@ public class SystemIntegrationTest {
 
 		setupModerator(context3, "serverA3", "pgA");
 		setupModerator(context3, "serverB3", "pgB");
+		
+		// set up clients
+		client1 = (TransactionEndpoint)contextClient1.getBean("smanner");
+		client2 = (TransactionEndpoint)contextClient2.getBean("smanner");
 
 	}
 
@@ -147,14 +161,17 @@ public class SystemIntegrationTest {
 		context1.close();
 		context2.close();
 		context3.close();
+		contextConfig.close();
+		contextClient1.close();
+		contextClient2.close();
 	}
 
-	@Test(timeout = 5000)
+	@Test(timeout = 1000)
 	public void testStartup() {
 		// nothing here
 	}
 
-	@Test(timeout = 5000)
+	@Test(timeout = 1000)
 	public void testCommit() throws Exception {
 		long id = coordinator.addTransaction(new NullOperation("one"));
 		while (coordinator.getTransaction(id).getState() != TransactionState.COMMITTED) {
@@ -162,6 +179,34 @@ public class SystemIntegrationTest {
 		}
 	}
 	
+	@Test(timeout = 1000)
+	public void testSingleClient() throws Exception {
+		Map<String, Operation> operations = new HashMap<String, Operation>();
+		operations.put("tpcA", new NullOperation("A"));
+		operations.put("tpcB", new NullOperation("B"));
+		
+		long id = client1.create(operations);
+		
+		while(client1.getState(id) != TransactionState.COMMITTED) {
+			Thread.sleep(100);
+		}
+	}
+	
+	@Test(timeout = 1000)
+	public void testMultiClient() throws Exception {
+		Map<String, Operation> operations = new HashMap<String, Operation>();
+		operations.put("tpcA", new NullOperation("A"));
+		operations.put("tpcB", new NullOperation("B"));
+		
+		long id1 = client1.create(operations);
+		long id2 = client2.create(operations);
+		
+		while(client1.getState(id1) != TransactionState.COMMITTED ||
+			  client2.getState(id2) != TransactionState.COMMITTED) {
+			Thread.sleep(100);
+		}
+	}
+
 	void setupModerator(ApplicationContext context, String moderatorName, String groupName) {
 		@SuppressWarnings("unchecked")
 		Collection<MessageEndpoint> endpoints = (Collection<MessageEndpoint>) contextConfig.getBean(groupName);

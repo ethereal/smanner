@@ -69,7 +69,7 @@ public class Moderator implements MessageEndpoint {
 		protocol.setSelf(self);
 
 		log.trace("Moderator::createThreads");
-		executor = Executors.newFixedThreadPool(2);
+		executor = Executors.newSingleThreadExecutor();
 		executor.execute(moderatorThread);
 	}
 
@@ -83,10 +83,12 @@ public class Moderator implements MessageEndpoint {
 
 		@Override
 		public void run() {
-			log.trace("OutputThread::run()");
+			log.trace("ModeratorThread::run()");
 			try {
 				long startTime = System.nanoTime();
 				long currentTime = 0;
+				
+				log.debug("Thread started for node {}", self);
 
 				while (active) {
 					protocol.setTime(currentTime);
@@ -117,7 +119,7 @@ public class Moderator implements MessageEndpoint {
 					currentTime = System.nanoTime() - startTime;
 				}
 			} catch (Exception e) {
-				log.error("OutputThread {} encountered exception: {}", self, e);
+				log.error("ModeratorThread {} encountered exception: {}", self, e);
 			}
 		}
 
