@@ -144,23 +144,29 @@ public class TwoPhaseCommitCoordinator extends AbstractProtocol implements Trans
 
 	@Override
 	public long create(Map<String, Operation> operations) {
-		return addTransaction(operations);
+		synchronized (transactions) {
+			return addTransaction(operations);
+		}
 	}
 
 	@Override
 	public TransactionState getState(long transactionId) {
-		if(transactions.containsKey(transactionId))
-			return transactions.get(transactionId).state;
-		return TransactionState.UNKNOWN;
+		synchronized (transactions) {
+			if(transactions.containsKey(transactionId))
+				return transactions.get(transactionId).state;
+			return TransactionState.UNKNOWN;
+		}
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public Map<String, OperationResult> getResult(long transactionId) {
-		if(transactions.containsKey(transactionId) &&
-		   transactions.get(transactionId).state == TransactionState.COMMITTED)
-			return transactions.get(transactionId).results;
-		return (Map<String, OperationResult>)Collections.EMPTY_MAP;
+		synchronized (transactions) {
+			if(transactions.containsKey(transactionId) &&
+			   transactions.get(transactionId).state == TransactionState.COMMITTED)
+				return transactions.get(transactionId).results;
+			return (Map<String, OperationResult>)Collections.EMPTY_MAP;
+		}
 	}
 
 }

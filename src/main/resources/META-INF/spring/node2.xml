@@ -76,4 +76,10 @@
 		<property name="serviceName" value="tpcServiceL" />
 		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
 	</bean>
+
+	<bean id="exporterTransactionEndpoint" class="org.springframework.remoting.rmi.RmiServiceExporter">
+		<property name="service" ref="protocolTpcL" />
+		<property name="serviceName" value="smanner" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.TransactionEndpoint" />
+	</bean>
 </beans>
