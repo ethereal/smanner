@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import edu.ucsb.cs.smanner.protocol.Operation;
 import edu.ucsb.cs.smanner.protocol.tpc.Transaction;
-import edu.ucsb.cs.smanner.protocol.tpc.Transaction.TransactionState;
 import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitCoordinator;
 import edu.ucsb.cs.smanner.protocol.tpc.TwoPhaseCommitParticipant;
 

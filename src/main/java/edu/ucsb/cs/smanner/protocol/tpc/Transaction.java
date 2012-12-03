@@ -5,14 +5,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import edu.ucsb.cs.smanner.net.TransactionState;
 import edu.ucsb.cs.smanner.protocol.Operation;
 import edu.ucsb.cs.smanner.protocol.OperationResult;
 
 public class Transaction {
-	public enum TransactionState {
-		NEW, PREPARED, COMMITTED, ABORTED
-	}
-
 	final long id;
 	final String coordinator;
 	final Set<String> followers;

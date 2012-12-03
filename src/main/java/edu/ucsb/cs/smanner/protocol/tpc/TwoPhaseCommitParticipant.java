@@ -8,11 +8,11 @@ import java.util.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.ucsb.cs.smanner.net.TransactionState;
 import edu.ucsb.cs.smanner.protocol.AbstractProtocol;
 import edu.ucsb.cs.smanner.protocol.Message;
 import edu.ucsb.cs.smanner.protocol.Operation;
 import edu.ucsb.cs.smanner.protocol.OperationResult;
-import edu.ucsb.cs.smanner.protocol.tpc.Transaction.TransactionState;
 
 public class TwoPhaseCommitParticipant extends AbstractProtocol {
 	private static Logger log = LoggerFactory.getLogger(TwoPhaseCommitParticipant.class);
