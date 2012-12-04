@@ -1,0 +1,39 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-3.1.xsd
+	http://www.springframework.org/schema/util
+	http://www.springframework.org/schema/util/spring-util-3.1.xsd">
+
+	<bean id="protocolA3" class="edu.ucsb.cs.smanner.protocol.paxos.PaxosFollower" />
+
+	<bean id="serverA3" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
+		<constructor-arg name="self" value="pgA3" />
+		<constructor-arg name="protocol" ref="protocolA3" />
+		<property name="groupName" value="pgA"/>
+	</bean>
+
+	<bean id="exporterA3" class="org.springframework.remoting.rmi.RmiServiceExporter">
+		<property name="service" ref="serverA3" />
+		<property name="serviceName" value="paxosServiceA3" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="protocolB3" class="edu.ucsb.cs.smanner.protocol.paxos.PaxosFollower" />
+
+	<bean id="serverB3" class="edu.ucsb.cs.smanner.net.Moderator" destroy-method="cancel">
+		<constructor-arg name="self" value="pgB3" />
+		<constructor-arg name="protocol" ref="protocolB3" />
+		<property name="groupName" value="pgB"/>
+	</bean>
+
+	<bean id="exporterB3" class="org.springframework.remoting.rmi.RmiServiceExporter">
+		<property name="service" ref="serverB3" />
+		<property name="serviceName" value="paxosServiceB3" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+</beans>
