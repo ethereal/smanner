@@ -65,7 +65,7 @@ public class SystemIntegrationTest {
 		followerA.addListener(new ProposalListener() {
 			@Override
 			public void notify(long id, Operation operation) {
-				log.debug("notified Paxos Group B");
+				log.debug("notified Paxos Group A");
 				if(operation instanceof PaxosPrepareOperation) {
 					// prepare
 					try {
