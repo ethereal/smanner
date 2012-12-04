@@ -65,8 +65,10 @@ public class TwoPhaseCommitCoordinator extends AbstractProtocol implements Trans
 
 			log.debug("received commit confirmation for transaction {} from {}", t.id, msg.getSource());
 
-			log.debug("transaction {} committed, result {}", t.id, msg.result);
 			t.commit(msg.getSource(), msg.result);
+			if(t.state == TransactionState.COMMITTED) {
+				log.debug("transaction {} committed, result {}", t.id, t.results);
+			}
 			
 		} else {
 			throw new Exception(String.format("unexpected message type %s", message.getClass()));

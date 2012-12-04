@@ -50,6 +50,7 @@ public class Node3 {
 			@Override
 			public void notify(long id, Operation operation) {
 				if(operation instanceof PaxosWriteOperation) {
+					log.debug("write PGA");
 					// commit
 					try {
 						gradesStore.append(((PaxosWriteOperation) operation).getString());
@@ -66,6 +67,7 @@ public class Node3 {
 			@Override
 			public void notify(long id, Operation operation) {
 				if(operation instanceof PaxosWriteOperation) {
+					log.debug("write PGB");
 					// commit
 					try {
 						statsStore.append(((PaxosWriteOperation) operation).getString());

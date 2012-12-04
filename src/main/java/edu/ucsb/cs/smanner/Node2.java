@@ -62,6 +62,7 @@ public class Node2 {
 			public void notify(long id, Operation operation) {
 				log.debug("notified Paxos Group B");
 				if(operation instanceof PaxosPrepareOperation) {
+					log.debug("prepare PGB");
 					// prepare
 					try {
 						lock.lock(operation.getId());
@@ -69,7 +70,13 @@ public class Node2 {
 					} catch(Exception e) {
 						participantB.declinePrepare(((PaxosPrepareOperation) operation).transactionId);
 					}
+				}  else if(operation instanceof PaxosAbortOperation) {
+					log.debug("abort PGB");
+					// abort
+					lock.unlock();
+					participantB.abortTransaction(((PaxosAbortOperation) operation).transactionId);
 				} else if(operation instanceof PaxosWriteOperation) {
+					log.debug("write PGB");
 					// commit
 					try {
 						statsStore.append(((PaxosWriteOperation) operation).getString());
@@ -79,10 +86,19 @@ public class Node2 {
 					}
 					lock.unlock();
 					participantB.commitTransaction(((PaxosWriteOperation) operation).transactionId);
-				}  else if(operation instanceof PaxosAbortOperation) {
-					// abort
+				} else if(operation instanceof PaxosReadOperation) {
+					log.debug("read PGB");
+					// commit
+					String result;
+					try {
+						result = statsStore.read();
+					} catch (Exception e) {
+						// should not happen
+						log.error("could not read file store");
+						result = "[ERROR]";
+					}
 					lock.unlock();
-					participantB.abortTransaction(((PaxosAbortOperation) operation).transactionId);
+					participantB.commitTransaction(((PaxosReadOperation) operation).transactionId, new ReadOperationResult(operation, result));
 				} else {
 					log.error("unknown operation {}", operation.getId());
 				}
@@ -94,6 +110,7 @@ public class Node2 {
 			@Override
 			public void notify(long id, Operation operation) {
 				if(operation instanceof PaxosWriteOperation) {
+					log.debug("write PGA");
 					// commit
 					try {
 						gradesStore.append(((PaxosWriteOperation) operation).getString());
@@ -116,13 +133,7 @@ public class Node2 {
 				if(operation instanceof WriteOperation) {
 					leaderB.addProposal(new PaxosWriteOperation(operation.getId(), id, ((WriteOperation) operation).getString()));
 				} else if(operation instanceof ReadOperation) {
-					try {
-						participant.commitTransaction(id, new ReadOperationResult(operation, statsStore.read()));
-					} catch (Exception e) {
-						// should not happen
-						log.error("could not read from file store");
-						participant.commitTransaction(id, new ReadOperationResult(operation, "[ERROR]"));
-					}
+					leaderB.addProposal(new PaxosReadOperation(operation.getId(), id));
 				}
 			}
 			@Override

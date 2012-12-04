@@ -27,7 +27,7 @@ public class Client {
 		Client client = new Client();
 		client.setUp();
 		
-		log.info("Client prepared.");
+		log.info("Client running.");
 		client.execute(args);
 
 		log.info("Client shutting down.");
@@ -52,11 +52,16 @@ public class Client {
 		long tid = endpoint.create(operations);
 		
 		try {
-			while(endpoint.getState(tid) != TransactionState.COMMITTED) {
+			while(endpoint.getState(tid) != TransactionState.COMMITTED &&
+				  endpoint.getState(tid) != TransactionState.ABORTED) {
 				Thread.sleep(100);
 			}
-			log.info("result A:\n{}", ((ReadOperationResult)endpoint.getResult(tid).get("tpcA")).getResult());
-			log.info("result B:\n{}", ((ReadOperationResult)endpoint.getResult(tid).get("tpcB")).getResult());
+			TransactionState state = endpoint.getState(tid);
+			log.info("transaction {} completed with state {}", tid, state);
+			if("read".equals(args[0]) && state == TransactionState.COMMITTED) {
+				log.info("result A:\n{}", ((ReadOperationResult)endpoint.getResult(tid).get("tpcA")).getResult());
+				log.info("result B:\n{}", ((ReadOperationResult)endpoint.getResult(tid).get("tpcB")).getResult());
+			}
 		} catch (InterruptedException e) {
 			log.warn("Interrupted. Exisiting.");
 		}
