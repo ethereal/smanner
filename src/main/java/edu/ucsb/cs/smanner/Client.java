@@ -51,11 +51,18 @@ public class Client {
 		long tid = endpoint.create(operations);
 		
 		try {
-			while(endpoint.getState(tid) != TransactionState.COMMITTED &&
-				  endpoint.getState(tid) != TransactionState.ABORTED) {
-				Thread.sleep(100);
-			}
 			TransactionState state = endpoint.getState(tid);
+			while(state != TransactionState.COMMITTED) {
+				// retry externally
+				if(state == TransactionState.ABORTED) {
+					log.debug("transaction {} failed. Retrying.", tid);
+					tid = endpoint.create(operations);
+				}
+				
+				Thread.sleep(10);
+				state = endpoint.getState(tid);
+			}
+
 			log.info("transaction {} completed with state {}", tid, state);
 			if("read".equals(args[0]) && state == TransactionState.COMMITTED) {
 				log.info("result A:\n{}", ((ReadOperationResult)endpoint.getResult(tid).get("tpcA")).getResult());
