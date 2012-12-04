@@ -7,10 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import edu.ucsb.cs.smanner.net.MessageEndpoint;
 import edu.ucsb.cs.smanner.net.Moderator;
-import edu.ucsb.cs.smanner.net.TestUtil;
 import edu.ucsb.cs.smanner.protocol.Operation;
 import edu.ucsb.cs.smanner.protocol.paxos.PaxosFollower;
 import edu.ucsb.cs.smanner.protocol.paxos.PaxosLeader;
@@ -50,7 +50,7 @@ public class Node1 {
 	
 	public void setUp() throws Exception {
 		log.trace("Node1::setUp()");
-		context = TestUtil.createContext("/META-INF/spring/node1.xml");
+		context = new ClassPathXmlApplicationContext("/META-INF/spring/node1.xml");
 		
 		// Paxos Group A
 		leaderA = (PaxosLeader) context.getBean("protocolAL");
@@ -146,7 +146,7 @@ public class Node1 {
 	public void run() {
 		log.trace("Node1::run()");
 		// set up servers
-		contextConfig = TestUtil.createContext("/META-INF/spring/config.xml");
+		contextConfig = new ClassPathXmlApplicationContext("/META-INF/spring/config.xml");
 		setupModerator(context, "serverAL", "pgA");
 		setupModerator(context, "serverA1", "pgA");
 		setupModerator(context, "serverB1", "pgB");

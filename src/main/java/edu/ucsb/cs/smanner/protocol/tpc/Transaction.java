@@ -51,6 +51,9 @@ public class Transaction {
 	}
 
 	public void prepare(String follower) {
+		if(state == TransactionState.ABORTED)
+			return;
+		
 		if (state != TransactionState.NEW)
 			throw new IllegalStateException("Transaction must be in state NEW");
 
@@ -61,6 +64,9 @@ public class Transaction {
 	}
 
 	public void commit(String follower, OperationResult result) {
+		if(state == TransactionState.ABORTED)
+			return;
+		
 		if (state != TransactionState.PREPARED)
 			throw new IllegalStateException("Transaction must be in state PREPARED");
 
