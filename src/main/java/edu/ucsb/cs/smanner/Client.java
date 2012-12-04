@@ -8,7 +8,6 @@ import java.util.concurrent.ExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import edu.ucsb.cs.smanner.net.TransactionEndpoint;
 import edu.ucsb.cs.smanner.net.TransactionState;
@@ -69,7 +68,7 @@ public class Client {
 	
 	public void setUp() throws Exception {
 		log.trace("Client::setUp()");
-		context = new ClassPathXmlApplicationContext("/META-INF/spring/client.xml");
+		context = NodeTool.createContext("/META-INF/spring/client.xml");
 		endpoint = (TransactionEndpoint)context.getBean("smanner");
 	}
 

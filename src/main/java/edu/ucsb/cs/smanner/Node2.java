@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import edu.ucsb.cs.smanner.net.MessageEndpoint;
 import edu.ucsb.cs.smanner.net.Moderator;
@@ -40,17 +39,17 @@ public class Node2 {
 		node.setUp();
 		
 		log.info("Node prepared, press enter to run.");
-		UITool.readLine();
+		NodeTool.readLine();
 		node.run();
 
 		log.info("Node running, press enter to stop.");
-		UITool.readLine();
+		NodeTool.readLine();
 		node.tearDown();
 	}
 	
 	public void setUp() throws Exception {
 		log.trace("Node2::setUp()");
-		context = new ClassPathXmlApplicationContext("/META-INF/spring/node2.xml");
+		context = NodeTool.createContext("/META-INF/spring/node2.xml");
 		
 		// Paxos Group B
 		leaderB = (PaxosLeader) context.getBean("protocolBL");
@@ -147,7 +146,7 @@ public class Node2 {
 	public void run() {
 		log.trace("Node2::run()");
 		// set up servers
-		contextConfig = new ClassPathXmlApplicationContext("/META-INF/spring/config.xml");
+		contextConfig = NodeTool.createContext("/META-INF/spring/config.xml");
 		setupModerator(context, "serverA2", "pgA");
 		setupModerator(context, "serverBL", "pgB");
 		setupModerator(context, "serverB2", "pgB");
