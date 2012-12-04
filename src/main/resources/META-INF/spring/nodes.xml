@@ -1,0 +1,87 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-3.1.xsd
+	http://www.springframework.org/schema/util
+	http://www.springframework.org/schema/util/spring-util-3.1.xsd">
+
+	<bean id="pgAL" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://ec2-54-242-187-144.compute-1.amazonaws.com/paxosServiceAL" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="pgA1" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://ec2-54-242-187-144.compute-1.amazonaws.com/paxosServiceA1" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="pgA2" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://ec2-54-245-132-249.us-west-2.compute.amazonaws.com/paxosServiceA2" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="pgA3" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://ec2-54-247-35-158.eu-west-1.compute.amazonaws.com/paxosServiceA3" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="pgBL" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://ec2-54-245-11-24.us-west-2.compute.amazonaws.com/paxosServiceBL" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="pgB1" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://ec2-184-72-174-182.compute-1.amazonaws.com/paxosServiceB1" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="pgB2" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://ec2-54-245-11-24.us-west-2.compute.amazonaws.com/paxosServiceB2" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="pgB3" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://ec2-79-125-80-97.eu-west-1.compute.amazonaws.com/paxosServiceB3" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="tpcL" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://ec2-54-245-11-24.us-west-2.compute.amazonaws.com/tpcServiceL" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="tpcA" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://ec2-54-242-187-144.compute-1.amazonaws.com/tpcServiceA" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<bean id="tpcB" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://ec2-54-245-11-24.us-west-2.compute.amazonaws.com/tpcServiceB" />
+		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.MessageEndpoint" />
+	</bean>
+
+	<util:set id="pgA">
+		<ref bean="pgAL" />
+		<ref bean="pgA1" />
+		<ref bean="pgA2" />
+		<ref bean="pgA3" />
+	</util:set>
+
+	<util:set id="pgB">
+		<ref bean="pgBL" />
+		<ref bean="pgB1" />
+		<ref bean="pgB2" />
+		<ref bean="pgB3" />
+	</util:set>
+
+	<util:set id="tpc">
+		<ref bean="tpcL" />
+		<ref bean="tpcA" />
+		<ref bean="tpcB" />
+	</util:set>
+
+</beans>

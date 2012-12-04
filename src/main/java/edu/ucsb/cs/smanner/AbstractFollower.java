@@ -67,7 +67,7 @@ public abstract class AbstractFollower {
 	public void run() {
 		log.trace("AbstractFollower::run()");
 		// set up servers
-		contextConfig = NodeTool.createContext("/META-INF/spring/config.xml");
+		contextConfig = NodeTool.createContext("/META-INF/spring/nodes.xml");
 		setupModerator(context);
 	}
 	

@@ -8,7 +8,7 @@
 	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.5.xsd">
 
 	<bean id="smanner" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
-		<property name="serviceUrl" value="rmi://localhost/smanner" />
+		<property name="serviceUrl" value="rmi://ec2-54-245-11-24.us-west-2.compute.amazonaws.com/smanner" />
 		<property name="serviceInterface" value="edu.ucsb.cs.smanner.net.TransactionEndpoint" />
 	</bean>
 

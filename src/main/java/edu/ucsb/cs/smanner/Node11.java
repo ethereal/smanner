@@ -126,7 +126,7 @@ public class Node11 {
 	public void run() {
 		log.trace("Node1::run()");
 		// set up servers
-		contextConfig = NodeTool.createContext("/META-INF/spring/config.xml");
+		contextConfig = NodeTool.createContext("/META-INF/spring/nodes.xml");
 		setupModerator(context, "serverAL", "pgA");
 		setupModerator(context, "serverA1", "pgA");
 		setupModerator(context, "serverTpcA", "tpc");
