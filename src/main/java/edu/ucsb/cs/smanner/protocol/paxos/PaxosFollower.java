@@ -30,8 +30,8 @@ public class PaxosFollower extends AbstractProtocol {
 	
 	@Override
 	public void put(Message message) throws Exception {
-		if(message instanceof ProposeMessage) {
-			handlePropose((ProposeMessage)message);
+		if(message instanceof DoAccept) {
+			handlePropose((DoAccept)message);
 		} else if (message instanceof AcceptMessage) {
 			handleAccept((AcceptMessage)message);
 		} else {
@@ -39,7 +39,7 @@ public class PaxosFollower extends AbstractProtocol {
 		}
 	}
 	
-	void handlePropose(ProposeMessage msg) throws Exception {
+	void handlePropose(DoAccept msg) throws Exception {
 		if(proposals.containsKey(msg.id))
 			throw new Exception(String.format("Proposal %d already exists", msg.id));
 		

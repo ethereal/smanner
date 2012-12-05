@@ -48,7 +48,7 @@ public class PaxosLeader extends AbstractProtocol {
 		nextId++;
 		
 		for(String node : nodes) {
-			outQueue.add(new ProposeMessage(self, node, id, acceptors, operation));
+			outQueue.add(new DoAccept(self, node, id, acceptors, operation));
 		}
 		
 		return id;

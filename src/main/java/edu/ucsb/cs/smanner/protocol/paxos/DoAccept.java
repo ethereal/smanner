@@ -4,7 +4,7 @@ import java.util.Set;
 
 import edu.ucsb.cs.smanner.protocol.Operation;
 
-public class ProposeMessage extends PaxosMessage {
+public class DoAccept extends PaxosMessage {
 
 	/**
 	 * 
@@ -14,7 +14,7 @@ public class ProposeMessage extends PaxosMessage {
 	final Set<String> acceptors;
 	final Operation operation;
 
-	public ProposeMessage(String source, String destination, long id, Set<String> acceptors, Operation operation) {
+	public DoAccept(String source, String destination, long id, Set<String> acceptors, Operation operation) {
 		super(source, destination, id);
 		this.acceptors = acceptors;
 		this.operation = operation;
